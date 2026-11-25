@@ -6,7 +6,7 @@
 
 ## 在线地址
 
-待建仓并开通 GitHub Pages 后填写，骨架阶段无公开地址。
+https://murongshan.github.io/hsr-axis-simulator/（仓库：https://github.com/murongshan/hsr-axis-simulator）
 
 ## 本地怎么打开
 

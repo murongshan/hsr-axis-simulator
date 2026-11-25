@@ -1,0 +1,2404 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>简易排轴模拟器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        color-scheme: light dark;
+        --bg:#f2f2ef;
+        --surface:#ffffff;
+        --surface2:#e9e9e4;
+        --ink:#191c22;
+        --muted:#6b7078;
+        --line:#d9d9d2;
+        --gold:#a87b12;
+        --gold-bg:#fdf3d7;
+        --gold-ink:#6d4f00;
+        --teal:#0b7370;
+        --teal-bg:#dff3f2;
+        --red:#b42318;
+        --red-bg:#fdecea;
+        --ally:#0b7370;
+        --enemy:#b42318;
+        --shadow:0 1px 3px rgba(20,20,20,.08),0 8px 24px rgba(20,20,20,.05);
+        --radius:14px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#101218;
+          --surface:#1a1d26;
+          --surface2:#232633;
+          --ink:#eceef2;
+          --muted:#9aa0ad;
+          --line:#2e3242;
+          --gold:#e2b84b;
+          --gold-bg:#2e270f;
+          --gold-ink:#f0d48a;
+          --teal:#45c4be;
+          --teal-bg:#12302e;
+          --red:#f08a80;
+          --red-bg:#331a17;
+          --ally:#45c4be;
+          --enemy:#f08a80;
+          --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25);
+        }
+      }
+      *{box-sizing:border-box}
+      html{scroll-behavior:smooth}
+      body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans SC",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+      button,[role="button"],select,summary,input:not([type="checkbox"],[type="radio"]){min-height:2.25rem}
+      button{font-family:inherit;cursor:pointer}
+      input,select{font-family:inherit}
+      .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 56px}
+      header.top{padding:10px 2px 18px;border-bottom:2px solid var(--ink)}
+      header.top h1{font-family:"Noto Serif SC",serif;font-weight:900;font-size:clamp(28px,5vw,42px);letter-spacing:.02em;margin:0;line-height:1.15}
+      header.top p{margin:8px 0 0;color:var(--muted);font-size:14.5px;max-width:760px}
+      .rule-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+      .chip{font-size:12.5px;font-weight:700;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink)}
+      .chip b{color:var(--gold)}
+      .section{margin-top:28px}
+      .section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+      .section-head h2{font-family:"Noto Serif SC",serif;font-size:21px;font-weight:900;margin:0}
+      .section-head span{color:var(--muted);font-size:13px}
+      .team-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+      @media(max-width:900px){.team-grid{grid-template-columns:repeat(2,1fr)}}
+      @media(max-width:520px){.team-grid{grid-template-columns:1fr}}
+      .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+      .card.ally{border-top:4px solid var(--ally)}
+      .card.enemy-card{border-top:4px solid var(--enemy)}
+      .card label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin:10px 0 4px}
+      .card label:first-of-type{margin-top:0}
+      .name-input{width:100%;border:none;background:transparent;font-size:17px;font-weight:900;color:var(--ink);padding:2px 0;border-bottom:1px dashed var(--line);border-radius:0}
+      .name-input:focus{outline:none;border-bottom-color:var(--gold)}
+      .preset-name{font-size:17px;font-weight:900;padding:2px 0}
+      .preset-meta{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+      .preset-meta b{color:var(--ink)}
+      select.char-select{width:100%;border:1px solid var(--line);background:var(--surface2);border-radius:9px;padding:7px 9px;font-size:14.5px;font-weight:700;color:var(--ink)}
+      .num-row{display:flex;gap:8px}
+      .num-row>div{flex:1}
+      input[type="number"]{width:100%;border:1px solid var(--line);background:var(--surface2);border-radius:9px;padding:7px 9px;font-size:15px;font-weight:700;color:var(--ink)}
+      input[type="number"]:focus{outline:2px solid var(--gold);outline-offset:0;border-color:transparent}
+      .av-line{margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap}
+      .av-line b{color:var(--ink);font-variant-numeric:tabular-nums}
+      .badge{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--teal-bg);color:var(--teal)}
+      .badge.miss{background:var(--surface2);color:var(--muted)}
+      .badge.warnb{background:var(--gold-bg);color:var(--gold-ink)}
+      .adv{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+      .adv-title{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:2px}
+      .mode-bar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+      .mode-bar .fld{display:flex;flex-direction:column;gap:4px}
+      .mode-bar label{font-size:12px;font-weight:700;color:var(--muted)}
+      select{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 10px;font-size:14px;font-weight:700;color:var(--ink)}
+      .mode-info{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--enemy);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13.5px}
+      .mode-info .mi-title{font-weight:900;font-size:14.5px}
+      .mode-info .mi-title span{color:var(--enemy)}
+      .mode-info p{margin:5px 0 0;color:var(--muted);font-size:13px}
+      .mode-info p b{color:var(--ink)}
+      .enemy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+      @media(max-width:900px){.enemy-grid{grid-template-columns:1fr}}
+      .enemy-note{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.55}
+      .spd-edit{display:flex;align-items:center;gap:8px}
+      .spd-edit input{max-width:110px}
+      .spd-edit span{font-size:12px;color:var(--muted);font-weight:700}
+      .sim-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;align-items:start}
+      @media(max-width:900px){.sim-grid{grid-template-columns:1fr}}
+      .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+      .panel h3{margin:0 0 10px;font-size:15px;font-weight:900}
+      .sp-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+      .sp-label{font-size:13px;font-weight:900}
+      .sp-dots{display:flex;gap:6px}
+      .sp-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--gold);background:transparent}
+      .sp-dot.on{background:var(--gold)}
+      .sp-num{font-size:13px;color:var(--muted);font-weight:700}
+      .sp-warn{font-size:12.5px;color:var(--red);font-weight:700;display:none}
+      .now-box{margin-top:14px;border:1.5px solid var(--ink);border-radius:12px;padding:14px;background:var(--surface)}
+      .now-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+      .now-who{font-size:19px;font-weight:900}
+      .now-who .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:1px}
+      .now-meta{font-size:12.5px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+      .act-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+      @media(max-width:480px){.act-btns{grid-template-columns:1fr}}
+      .act-btn{border-radius:11px;border:1.5px solid var(--ink);padding:12px;text-align:left;background:var(--surface);color:var(--ink);min-height:64px}
+      .act-btn .t{font-size:16px;font-weight:900;display:block}
+      .act-btn .d{font-size:12.5px;color:var(--muted);font-weight:500;display:block;margin-top:2px}
+      .act-btn.primary{background:var(--ink);color:var(--bg)}
+      .act-btn.primary .d{color:inherit;opacity:.75}
+      .act-btn:disabled{opacity:.38;cursor:not-allowed}
+      .act-btn:not(:disabled):active{transform:scale(.985)}
+      .enemy-btn{width:100%;margin-top:12px;border-radius:11px;border:1.5px solid var(--enemy);background:var(--red-bg);color:var(--red);font-size:15px;font-weight:900;padding:12px;min-height:52px}
+      .tool-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+      .tool-btn{border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;min-height:40px}
+      .tool-btn:disabled{opacity:.4;cursor:not-allowed}
+      .energy-item{padding:11px 0;border-bottom:1px solid var(--line)}
+      .energy-item:last-child{border-bottom:none;padding-bottom:2px}
+      .energy-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+      .energy-name{font-weight:900;font-size:14.5px}
+      .energy-val{font-size:12.5px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+      .bar{height:10px;border-radius:99px;background:var(--surface2);margin-top:7px;overflow:hidden}
+      .bar>i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .25s ease}
+      .bar.tgh>i{background:var(--red)}
+      .energy-item.full .bar>i{background:var(--gold)}
+      .ult-btn{display:none;width:100%;margin-top:9px;border:none;border-radius:9px;background:var(--gold);color:#1a1400;font-weight:900;font-size:14px;padding:10px;min-height:42px;animation:pulse 1.4s ease-in-out infinite}
+      .energy-item.full .ult-btn{display:block}
+      .full-tag{display:none;font-size:11.5px;font-weight:900;color:var(--gold-ink);background:var(--gold-bg);border-radius:6px;padding:2px 7px}
+      .energy-item.full .full-tag{display:inline-block}
+      .special-tag{font-size:11.5px;font-weight:900;color:var(--teal);background:var(--teal-bg);border-radius:6px;padding:2px 7px}
+      .special-note{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+      .buff-line{font-size:12.5px;color:var(--gold-ink);background:var(--gold-bg);border-radius:7px;padding:4px 8px;margin-top:7px;font-weight:700}
+      @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.13)}}
+      @media (prefers-reduced-motion: reduce){.ult-btn{animation:none}.bar>i{transition:none}}
+      .tl-list{display:flex;flex-direction:column}
+      .tl-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font-size:14px}
+      .tl-item:nth-child(odd){background:var(--surface2)}
+      .tl-item.next{background:var(--gold-bg);outline:1.5px solid var(--gold)}
+      .tl-item.done{opacity:.42}
+      .tl-idx{width:26px;height:26px;flex:none;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums}
+      .tl-item.next .tl-idx{background:var(--gold);color:#1a1400;border-color:var(--gold)}
+      .tl-dot{width:9px;height:9px;border-radius:50%;flex:none}
+      .tl-name{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .tl-av{font-size:12.5px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+      .tl-cycle{font-size:11px;font-weight:900;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 6px;white-space:nowrap}
+      .tl-act{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+      .cycle-divider{display:flex;align-items:center;gap:10px;margin:10px 2px 4px;font-size:12px;font-weight:900;color:var(--gold)}
+      .cycle-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+      .hist-list{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:0}
+      .hist-item{display:flex;gap:9px;padding:7px 2px;border-bottom:1px dashed var(--line);font-size:13.5px;align-items:baseline}
+      .hist-item:last-child{border-bottom:none}
+      .hist-av{color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:86px}
+      .hist-what b{font-weight:900}
+      .hist-sp{margin-left:auto;font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
+      .empty-note{color:var(--muted);font-size:13.5px;padding:8px 0}
+      .table-scroll{overflow-x:auto}
+      table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+      th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+      th{font-size:12px;color:var(--muted);font-weight:900;background:var(--surface2)}
+      td.num,th.num{text-align:right}
+      tr td:first-child{font-weight:700}
+      .hit{color:var(--teal);font-weight:900}
+      .miss{color:var(--muted)}
+      @media(max-width:640px){
+        table{min-width:0;font-size:12px}
+        th,td{padding:7px 5px}
+        td:first-child{white-space:normal}
+      }
+      .foot{margin-top:34px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:12.5px;line-height:1.7}
+      .foot b{color:var(--ink)}
+      .ctl-bar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+      .ctl-bar .fld{display:flex;flex-direction:column;gap:4px}
+      .ctl-bar label{font-size:12px;font-weight:700;color:var(--muted)}
+      .mini-input{width:78px;border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:6px 8px;font-size:14px;font-weight:700;color:var(--ink)}
+      .mini-select{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:6px 8px;font-size:13.5px;font-weight:700;color:var(--ink)}
+      td .who-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+      .rec-val{font-weight:900;font-size:15px}
+      .stat-ok{color:var(--teal);font-weight:700}
+      .stat-bad{color:var(--red);font-weight:700}
+      .stat-mid{color:var(--gold-ink);font-weight:700}
+      .plan-list{display:flex;flex-direction:column}
+      .plan-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font-size:14px}
+      .plan-item:nth-child(odd){background:var(--surface2)}
+      .plan-item.ult-row{background:var(--gold-bg)}
+      .plan-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+      .go-btn{border:none;border-radius:10px;background:var(--ink);color:var(--bg);font-size:14.5px;font-weight:900;padding:11px 20px;min-height:46px}
+      .go-btn:disabled{opacity:.4;cursor:not-allowed}
+      .apply-btn{border:1.5px solid var(--gold);border-radius:10px;background:var(--gold-bg);color:var(--gold-ink);font-size:14px;font-weight:900;padding:10px 18px;min-height:44px}
+      .apply-btn:disabled{opacity:.4;cursor:not-allowed}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <h1>简易排轴模拟器</h1>
+        <p>《崩坏：星穹铁道》排轴工具：选角色与关卡，手动推演、反推配速，或一键搜索最优轴。</p>
+        <div class="rule-chips">
+          <span class="chip">行动值 AV = <b>10000 ÷ 速度</b></span>
+          <span class="chip">第 1 轮 <b>0–150 AV</b>，之后每 <b>100 AV</b> 一轮</span>
+          <span class="chip">战技点开局 <b>3</b> · 上限 <b>5</b></span>
+        </div>
+      </header>
+
+      <!-- ===== 1. 编队 ===== -->
+      <section class="section" aria-label="编队设置">
+        <div class="section-head"><h2>一、编队：选角色，填速度</h2><span>卡上只填速度、面板与打法选择，其余为角色固定数据。</span></div>
+        <div class="team-grid" id="teamGrid"></div>
+        <div class="tool-row" style="margin-top:12px">
+          <button class="tool-btn" id="teamExportBtn" type="button">导出队伍配置（.json）</button>
+          <button class="tool-btn" id="teamImportBtn" type="button">导入队伍配置</button>
+          <input type="file" id="teamFile" accept=".json,application/json" style="display:none" />
+          <span style="font-size:12.5px;color:var(--muted)">多套队伍各存一个文件。</span>
+        </div>
+        <div id="importNotice" style="display:none;margin-top:8px;font-size:13px;font-weight:700;color:var(--gold-ink);background:var(--gold-bg);border-radius:8px;padding:8px 12px"></div>
+        <div id="summonBox" style="margin-top:16px"></div>
+
+        <div style="height:20px"></div>
+        <div class="section-head"><h2 style="font-size:18px">敌方：选当期高难关卡</h2><span>速度与韧性为本关固定数据、只读；敌人速度不用关心。</span></div>
+        <div class="mode-bar">
+          <div class="fld">
+            <label for="modeSelect">玩法模式</label>
+            <select id="modeSelect"></select>
+          </div>
+          <div class="fld">
+            <label for="stageSelect">关卡</label>
+            <select id="stageSelect"></select>
+          </div>
+          <div class="fld">
+            <label for="tghToggle">韧性条模拟</label>
+            <select id="tghToggle">
+              <option value="0" selected>关闭（击破靠手动判断）</option>
+              <option value="1">开启（按削韧自动判定击破）</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label for="defPct">敌方防御减伤 %（伤害模型）</label>
+            <input type="number" id="defPct" min="0" max="95" step="1" value="40" style="width:110px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 10px;font-size:14px;font-weight:700;color:var(--ink)" />
+          </div>
+          <div class="fld" id="customCountFld" style="display:none">
+            <label for="enemyCount">敌方数量（自定义）</label>
+            <select id="enemyCount">
+              <option value="1">1 个敌人</option>
+              <option value="2">2 个敌人</option>
+              <option value="3" selected>3 个敌人</option>
+            </select>
+          </div>
+        </div>
+        <div class="mode-info" id="modeInfo"></div>
+        <div class="enemy-grid" id="enemyGrid"></div>
+        <p class="enemy-note" id="enemyNote"></p>
+      </section>
+
+      <!-- ===== 2. 推演 ===== -->
+      <section class="section" aria-label="排轴推演">
+        <div class="section-head"><h2>二、一步步排轴</h2><span id="simMeta">第 1 步 · 已推进 0.0 AV · 第 1 轮</span></div>
+        <div class="sim-grid">
+          <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+            <div class="panel">
+              <div class="sp-row">
+                <span class="sp-label">战技点</span>
+                <div class="sp-dots" id="spDots"></div>
+                <span class="sp-num" id="spNum"></span>
+                <span class="sp-warn" id="spWarn">战技点不足，只能普攻</span>
+              </div>
+              <div class="now-box" id="nowBox"></div>
+              <div class="tool-row">
+                <button class="tool-btn" id="undoBtn" type="button">↩ 撤销一步</button>
+                <button class="tool-btn" id="resetBtn" type="button">重置推演</button>
+                <button class="tool-btn" id="exportHistBtn" type="button">导出行动记录（.txt）</button>
+              </div>
+              <div id="tghBox"></div>
+            </div>
+            <div class="panel">
+              <h3>行动记录</h3>
+              <div class="hist-list" id="histList"><div class="empty-note">还没有行动。在上方给当前角色选普攻或战技，记录会逐条记在这里。</div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>能量 · 终结技</h3>
+            <div id="energyList"></div>
+            <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">终结技不占回合，能量满后可随时插队释放。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 3. 序列 ===== -->
+      <section class="section" aria-label="行动序列">
+        <div class="section-head"><h2>三、行动序列预览</h2><span>纯按速度的前 36 步。</span></div>
+        <div class="sim-grid">
+          <div class="panel"><div class="tl-list" id="tlList"></div></div>
+          <div class="panel">
+            <h3>各轮次行动次数</h3>
+            <div class="table-scroll"><table id="countTable"></table></div>
+            <p style="font-size:12.5px;color:var(--muted);margin:10px 0 0">≤150 / 250 / 350 / 450 AV 的累计动数。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 4. 阈值 ===== -->
+      <section class="section" aria-label="速度阈值">
+        <div class="section-head"><h2>四、速度阈值速查</h2><span>限定 AV 内多动一次所需的最低速度。</span></div>
+        <div class="panel">
+          <div class="table-scroll"><table id="threshTable"></table></div>
+          <p style="font-size:12.5px;color:var(--muted);margin:10px 0 0">所需速度 = 动数 × 10000 ÷ AV 上限；150 内 2 动需 133.4，250 内 3 动需 120.0。</p>
+        </div>
+      </section>
+
+      <!-- ===== 5. 反推配速 ===== -->
+      <section class="section" aria-label="反推配速">
+        <div class="section-head"><h2>五、反推配速：先定轴，再配速度</h2><span>定动数与顺位，反算推荐速度。</span></div>
+        <div class="panel">
+          <div class="ctl-bar">
+            <div class="fld">
+              <label for="revLimit">行动窗口（AV 上限）</label>
+              <select id="revLimit">
+                <option value="150">≤150 AV（第 1 轮）</option>
+                <option value="250" selected>≤250 AV（前 2 轮）</option>
+                <option value="350">≤350 AV（前 3 轮）</option>
+                <option value="450">≤450 AV（前 4 轮）</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>&nbsp;</label>
+              <button type="button" class="apply-btn" id="revApply">把推荐速度填回编队</button>
+            </div>
+          </div>
+          <div class="table-scroll"><table id="revTable"></table></div>
+          <p style="font-size:12.5px;color:var(--muted);margin:10px 0 0">推荐值按顺位逐级拉开 1.0 速避开同速；已计入常驻加速，拉条与击破自拉条不计入。</p>
+        </div>
+      </section>
+
+      <!-- ===== 6. 最优轴搜索 ===== -->
+      <section class="section" aria-label="最优轴搜索">
+        <div class="section-head"><h2>六、最优轴搜索：按现有配置排最优操作序列</h2><span>自动搜最优操作序列。</span></div>
+        <div class="panel">
+          <div class="ctl-bar">
+            <div class="fld">
+              <label for="optHorizon">搜索范围（AV 上限）</label>
+              <select id="optHorizon">
+                <option value="250">≤250 AV（前 2 轮）</option>
+                <option value="350" selected>≤350 AV（前 3 轮）</option>
+                <option value="450">≤450 AV（前 4 轮）</option>
+                <option value="550">≤550 AV（前 5 轮）</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label for="optGoal">优化目标</label>
+              <select id="optGoal">
+                <option value="ult" selected>终结技次数优先</option>
+                <option value="dmg">伤害优先（期望伤害）</option>
+                <option value="smooth">战技点最顺（不溢出、不断档）</option>
+                <option value="skill">战技次数优先</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>&nbsp;</label>
+              <button type="button" class="go-btn" id="optRun">搜索最优轴</button>
+            </div>
+            <div class="fld">
+              <label>&nbsp;</label>
+              <button type="button" class="apply-btn" id="optApply" disabled>把这套轴载入手动推演</button>
+            </div>
+            <div class="fld">
+              <label>&nbsp;</label>
+              <button type="button" class="tool-btn" id="optExport" disabled style="min-height:46px">导出这套轴（.txt）</button>
+            </div>
+          </div>
+          <div id="optResult"><p class="empty-note" style="margin:0">还没有搜索结果。编队和敌人选好后点「搜索最优轴」，这里会给出完整的操作序列。</p></div>
+          <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">除「伤害优先」外为结构最优；伤害为期望值，击破 / 超击破仅在韧性模拟开启时计入。</p>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <b>数据来源：</b>角色倍率 / 削韧 / 回能与敌人数据取自星铁档案馆 nanoka 数据集（游戏 4.7，2026-11-24 核对）；基础速度与能量上限取自 Prydwen / Wiki；击破与超击破公式按游戏战斗机制资料交叉核对（2026-11-25）。个别未核实数值已在角色卡标注「未核实」。<br />
+        <b>公式：</b>击破伤害 = 3767.55 × 属性倍率 ×（1 + 击破特攻）×（最大韧性 ÷ 10 + 2）÷ 4 ×（1 − 防御减伤）；超击破伤害 = 3767.55 ×（本次削韧 ÷ 10）×（1 + 击破特攻）×（1 − 防御减伤）。<br />
+        <b>未建模：</b>击破持续伤害 · 敌方技能效果（减速 / 禁锢 / 提速）· 波次补怪 · 终结技敌方回合前抢插 · 概率追击 · 召唤物自身技能 · 光锥 / 遗器回能 · 强化 / 变身形态。
+      </footer>
+    </div>
+
+<script>
+// ---------- 基础规则 ----------
+var CYCLE_FIRST = 150, CYCLE_LEN = 100;
+function avOf(spd){ return 10000 / Math.max(1, spd);}
+function cycleOf(av){
+if (av <= CYCLE_FIRST + 1e-9) return 1;
+return 1 + Math.ceil((av - CYCLE_FIRST - 1e-9) / CYCLE_LEN);
+}
+function fmt(n, d){ return n.toFixed(d == null? 1: d);}
+function needSpd(times, limit){
+var v = times * 10000 / limit;
+return Math.ceil(v * 10) / 10;
+}
+function actionsWithin(spd, limit){
+var av = avOf(spd), c = 0, t = av;
+while (t <= limit + 1e-9){ c++; t += av;}
+return c;
+}
+function escapeHtml(s){
+return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var $ = function(id){ return document.getElementById(id);};
+
+// ---------- 角色库：基础速度 + 能量上限 + 普攻/战技回能（Prydwen / Wiki / 技能数据；倍率 / 削韧见下方 CHAR_MULT / CHAR_TGH，2026-11-24 核对） ----------
+// energy 为终结技能量上限；br / sr 为普攻 / 战技回能（缺省 20 / 30，例外逐个标注）；start 为开战自带能量；special 为不走能量条的专属资源角色
+var CHAR_DB = [
+{ id:'tb-dest', name:'开拓者·毁灭', spd:100, energy:120},
+{ id:'tb-pres', name:'开拓者·存护', spd:95, energy:120},
+{ id:'tb-harm', name:'开拓者·同谐', spd:105, energy:140, note:'终结技赋予全队超击破：角色卡「超击破赋予（全队）」已预置开关，开启后全队攻击已击破敌人按各自击破特攻结算超击破'},
+{ id:'tb-rem', name:'开拓者·记忆', spd:103, energy:160},
+{ id:'tb-ela', name:'开拓者·欢愉', spd:106, energy:160},
+{ id:'mar7', name:'三月七·存护', spd:101, energy:120},
+{ id:'mar7h', name:'三月七·巡猎', spd:102, energy:110},
+{ id:'evernight', name:'长夜月', spd:99, energy:240},
+{ id:'danheng', name:'丹恒', spd:110, energy:100},
+{ id:'dhil', name:'丹恒·饮月', spd:102, energy:140},
+{ id:'dhpt', name:'丹恒·腾荒', spd:97, energy:135},
+{ id:'himeko', name:'姬子', spd:96, energy:120},
+{ id:'himeko-nova', name:'姬子·启行', spd:98, energy:150},
+{ id:'welt', name:'瓦尔特', spd:102, energy:120},
+{ id:'seele', name:'希儿', spd:115, energy:120},
+{ id:'bronya', name:'布洛妮娅', spd:99, energy:120, adv:100, note:'战技使指定队友立即行动（100% 拉条）：角色卡「战技拉条」已预置 100% 且为灵活方式，每次放战技可现选拉谁，搜索会逐回合自动选最优对象'},
+{ id:'gepard', name:'杰帕德', spd:92, energy:100},
+{ id:'natasha', name:'娜塔莎', spd:98, energy:90},
+{ id:'bailu', name:'白露', spd:98, energy:100},
+{ id:'luocha', name:'罗刹', spd:101, energy:100},
+{ id:'yanqing', name:'彦卿', spd:109, energy:140},
+{ id:'jingyuan', name:'景元', spd:99, energy:130, summon:{ name:'神君', spd:60, tgh:15, mult:198 }, note:'神君为召唤物：已内置（速度 60、初始 3 段、每段倍率 66% / 削韧 5，按初始段数合计倍率 198% / 削韧 15；段数与速度随景元战技叠加的变化未建模），选入编队即自动按自身速度排进行动序列'},
+{ id:'silverwolf', name:'银狼', spd:107, energy:110},
+{ id:'sw999', name:'银狼 LV.999', spd:110, special:true, note:'特殊形态，终结技走专属机制，不走能量条'},
+{ id:'kafka', name:'卡芙卡', spd:100, energy:120},
+{ id:'blade', name:'刃', spd:97, energy:130, note:'终结技倍率只计攻击力部分（40%），另有生命上限部分（主目标 100%）与累计已损失生命部分未计入；强化普攻不单独建模'},
+{ id:'blade-m', name:'千冶·刃', spd:107, energy:160},
+{ id:'jingliu', name:'镜流', spd:96, energy:140, sr:20, note:'战技回能 20（非通用 30）；转魄状态与强化战技不单独建模，倍率 / 削韧按基础形态计'},
+{ id:'fuxuan', name:'符玄', spd:100, energy:135},
+{ id:'lynx', name:'玲可', spd:100, energy:100},
+{ id:'luka', name:'卢卡', spd:103, energy:130},
+{ id:'topaz', name:'托帕&账账', spd:110, energy:130, summon:{ name:'账账', spd:80, tgh:20, mult:150 }, note:'账账为召唤物：已内置（速度 80、行动倍率 150%、削韧 20），选入编队即自动排进行动序列，账账的行动即托帕追加攻击的来源'},
+{ id:'herta', name:'黑塔', spd:100, energy:110},
+{ id:'theherta', name:'大黑塔', spd:99, energy:220},
+{ id:'asta', name:'艾丝妲', spd:106, energy:120, buff:{trig:'ult', scope:'all', val:50, dur:2}, note:'终结技使全队速度 +50、持续 2 次行动：角色卡「持续加速」已按终结技触发、全队、+50、2 次行动预置'},
+{ id:'arlan', name:'阿兰', spd:102, energy:110},
+{ id:'pela', name:'佩拉', spd:105, energy:110},
+{ id:'sampo', name:'桑博', spd:102, energy:120},
+{ id:'serval', name:'希露瓦', spd:104, energy:100},
+{ id:'hook', name:'虎克', spd:94, energy:120},
+{ id:'qingque', name:'青雀', spd:98, energy:140},
+{ id:'tingyun', name:'停云', spd:112, energy:130},
+{ id:'sushang', name:'素裳', spd:107, energy:120},
+{ id:'yukong', name:'驭空', spd:107, energy:130},
+{ id:'guinaifen', name:'桂乃芬', spd:106, energy:120},
+{ id:'hanya', name:'寒鸦', spd:110, energy:140, buff:{trig:'skill', scope:'target', val:22, dur:2}, note:'战技给指定队友加速（满级约为寒鸦速度的 20%，按其基础速度预置 +22、持续 2 次行动）：已预置为灵活方式，每次放战技可现选给谁、搜索逐回合自动选；数值请按寒鸦面板速度调整'},
+{ id:'xueyi', name:'雪衣', spd:103, energy:120},
+{ id:'misha', name:'米沙', spd:96, energy:100},
+{ id:'acheron', name:'黄泉', spd:101, special:true, note:'残梦叠层制：靠队友施加负面效果叠层放终结技，不走能量条'},
+{ id:'blackswan', name:'黑天鹅', spd:102, energy:120},
+{ id:'sparkle', name:'花火', spd:101, energy:110, adv:50, note:'战技使指定队友行动提前 50%：角色卡「战技拉条」已预置 50% 且为灵活方式，每次放战技可现选拉谁，搜索会逐回合自动选最优对象'},
+{ id:'sparxie', name:'火花', spd:107, energy:160, note:'终结技倍率与自身欢愉度挂钩（公式含欢愉度项），无固定值，伤害模型中按未核实处理（计 0）'},
+{ id:'aventurine', name:'砂金', spd:106, energy:110},
+{ id:'robin', name:'知更鸟', spd:102, energy:160, uadv:{scope:'all', pct:25}, note:'终结技使全队行动提前 25%：角色卡「终结技拉条」已预置全队 25%'},
+{ id:'boothill', name:'波提欧', spd:107, energy:115},
+{ id:'firefly', name:'流萤', spd:104, energy:240, sr:144, srFixed:true, start:120, brk:100, uadv:{scope:'self', pct:100}, note:'战技固定回复能量上限的 60%（144 点，不吃充能效率）；天赋使开战能量不低于 50%，初始能量已按 120 预置；终结技本身不造成伤害，使自身行动提前 100% 并进入完全燃烧（已内置为终结技自拉条 100%）；倍率 / 削韧按基础形态计（普攻 100% / 10、战技 200% / 20），完全燃烧的强化形态（强化战技削韧 30 等）不单独建模；二命（星魂 2）：完全燃烧状态下强化普攻 / 战技击破敌方韧性或击杀敌人时，立即获得一个额外回合（等效自拉条 100%）——角色卡「击破自拉条」已预置 100%、默认关闭，抽到二命后开启；完全燃烧下攻击已击破敌人可造成超击破，角色卡「超击破」已预置开关' },
+{ id:'jade', name:'翡翠', spd:103, energy:140},
+{ id:'yunli', name:'云璃', spd:94, energy:120, fu:{ trig:'enemy', regen:10, tgh:10, mult:120 }, note:'天赋反击已内置（简化模型）：敌方行动后必定反击一次（倍率 120%、回能 10、削韧 10）；终结技的强化反击（勘破•灭）不单独建模'},
+{ id:'jiaoqiu', name:'椒丘', spd:98, energy:100},
+{ id:'lingsha', name:'灵砂', spd:98, energy:110, summon:{ name:'浮元', spd:90, tgh:10, mult:75 }, note:'浮元为召唤物：已内置（速度 90、行动倍率 75%（全体）、削韧 10；行动次数上限与额外单体段未建模），选入编队即自动排进行动序列'},
+{ id:'feixiao', name:'飞霄', spd:112, special:true, fu:{ trig:'ally', regen:0, tgh:5, mult:110 }, note:'飞黄叠层制：终结技消耗飞黄层数，不走能量条；天赋追加攻击已内置（简化模型）：队友普攻 / 战技后必定追击一次（倍率 110%、削韧 5；实战每回合至多触发 1 次，此限制未建模）'},
+{ id:'moze', name:'貊泽', spd:111, energy:120},
+{ id:'rappa', name:'乱破', spd:96, energy:140},
+{ id:'fugue', name:'忘归人', spd:102, energy:130, note:'战技赋予一名队友超击破：角色卡「超击破赋予」已预置，开关与对象由你决定，被赋予者攻击已击破敌人按其击破特攻结算超击破'},
+{ id:'gallagher', name:'加拉赫', spd:98, energy:110},
+{ id:'ruanmei', name:'阮·梅', spd:104, energy:130, buff:{trig:'passive', scope:'others', val:10, dur:2}, note:'天赋使其他队友速度提高（数值为阮·梅自身速度的 10%）：角色卡「持续加速」已按常驻、除自己外全队、+10 预置；面板速度变化时请把数值改成面板速度的 10%（如面板 144 速填 14）'},
+{ id:'huohuo', name:'藿藿', spd:98, energy:140},
+{ id:'argenti', name:'银枝', spd:103, energy:180, note:'能量到 90 即可释放半额终结技，180 为满额'},
+{ id:'sunday', name:'星期日', spd:96, energy:130, adv:100, note:'战技使指定队友立即行动（100% 拉条）：角色卡「战技拉条」已预置 100% 且为灵活方式，每次放战技可现选拉谁，搜索会逐回合自动选最优对象'},
+{ id:'aglaea', name:'阿格莱雅', spd:102, energy:350, sr:20, summon:{ name:'衣匠', spdPct:0.35, regen:10, tgh:10, mult:154 }, note:'战技为召唤忆灵技，实际回能 20，不是通用 30；忆灵「衣匠」已内置为自动召唤物：速度为阿格莱雅面板速度的 35%（自动跟随你填的面板速度）、行动倍率 154%、削韧 10、行动给阿格莱雅回能 10；终结技期间的联合攻击形态不单独建模'},
+{ id:'tribbie', name:'缇宝', spd:96, energy:120},
+{ id:'mydei', name:'万敌', spd:95, energy:160},
+{ id:'castorice', name:'遐蝶', spd:95, special:true, note:'新芽 / 死龙机制：靠治疗量积累，不走能量条'},
+{ id:'hyacine', name:'风堇', spd:110, energy:140},
+{ id:'anaxa', name:'那刻夏', spd:97, energy:140},
+{ id:'cipher', name:'赛飞儿', spd:106, energy:130},
+{ id:'phainon', name:'白厄', spd:94, special:true, note:'火种制：积累火种开启终结技变身，不走能量条'},
+{ id:'cyrene', name:'昔涟', spd:101, special:true, note:'回想制：靠队友施放技能积累回想，不走能量条'},
+{ id:'hysilens', name:'海瑟音', spd:102, energy:110},
+{ id:'cerydra', name:'刻律德菈', spd:99, energy:130},
+{ id:'dahlia', name:'大丽花', spd:96, energy:130},
+{ id:'yaoguang', name:'爻光', spd:101, energy:180, br:30, note:'普攻回能 30（非通用 20）'},
+{ id:'saber', name:'Saber', spd:101, energy:360},
+{ id:'archer', name:'Archer', spd:105, energy:220},
+{ id:'gilgamesh', name:'吉尔伽美什', spd:97, energy:360},
+{ id:'rin', name:'远坂凛', spd:102, energy:160},
+{ id:'aha', name:'星神★阿哈', spd:94, special:true, note:'欢愉笑点机制（4.7 新角色），不走常规能量条'}
+];
+// ---------- 角色削韧（普攻 / 战技 / 终结技）：全部预置角色按满级技能的真实削韧内置（游戏数据，2026-11-24 核对）；不造成伤害的技能为 0；扩散 / 群攻按每目标值 ----------
+// 流萤按基础形态计（终结技本身不造成伤害、削韧 0）；强化形态不单独建模
+var CHAR_TGH = {
+acheron:[10,20,20], aglaea:[10,0,0], aha:[10,10,5], anaxa:[10,10,20], archer:[10,20,30],
+argenti:[10,10,20], arlan:[10,20,20], asta:[10,10,0], aventurine:[10,0,30], bailu:[10,0,0],
+blackswan:[10,20,20], blade:[10,0,20], 'blade-m':[10,5,0], boothill:[10,0,30], bronya:[10,0,0],
+castorice:[10,20,0], cerydra:[10,0,20], cipher:[10,20,30], cyrene:[10,0,0], dahlia:[10,10,20],
+danheng:[10,20,30], dhil:[10,0,20], dhpt:[10,0,20], evernight:[10,0,30], feixiao:[10,20,30],
+firefly:[10,20,0], fugue:[10,0,20], fuxuan:[10,0,20], gallagher:[10,0,20], gepard:[10,20,0],
+gilgamesh:[10,20,40], guinaifen:[10,20,20], hanya:[10,20,0], herta:[10,10,20], himeko:[10,20,20],
+'himeko-nova':[10,0,48], hook:[10,20,30], huohuo:[10,0,0], hyacine:[10,0,0], hysilens:[10,10,20],
+jade:[10,0,20], jiaoqiu:[10,20,20], jingliu:[10,20,20], jingyuan:[10,10,20], kafka:[10,20,20],
+lingsha:[10,10,20], luka:[10,20,30], luocha:[10,0,20], lynx:[10,0,0], mar7:[10,0,20],
+mar7h:[10,0,30], misha:[10,20,10], moze:[10,20,30], mydei:[10,20,20], natasha:[10,0,0],
+pela:[10,20,20], phainon:[10,20,20], qingque:[10,0,20], rappa:[10,10,0], rin:[10,20,30],
+robin:[10,0,0], ruanmei:[10,0,0], saber:[10,20,40], sampo:[10,10,20], seele:[10,20,30],
+serval:[10,20,20], silverwolf:[10,20,30], sparkle:[10,0,0], sparxie:[10,0,20], sunday:[10,0,0],
+sushang:[10,20,30], sw999:[10,10,0], 'tb-dest':[10,20,30], 'tb-ela':[10,20,0], 'tb-harm':[10,10,0],
+'tb-pres':[10,0,20], 'tb-rem':[10,0,20], theherta:[10,15,20], tingyun:[10,0,0], topaz:[10,20,0],
+tribbie:[10,0,20], welt:[10,10,20], xueyi:[10,20,40], yanqing:[10,20,30], yaoguang:[10,0,0],
+yukong:[10,0,30], yunli:[10,20,10]
+};
+function tghOf(ch){
+return (ch && ch.tgh) || CHAR_TGH[ch.id] || [10, 20, 30];
+}
+// ---------- 角色技能倍率（普攻 / 战技 / 终结技，%）：全部预置角色按满级技能真实倍率内置（普攻 Lv.6、战技 / 终结技 Lv.10；多段取总和，扩散取主目标，弹射取全段总和）；null = 未核实（伤害按 0 计） ----------
+// 按基础形态计：强化 / 变身形态（如饮月强化普攻、镜流转魄、流萤完全燃烧）不单独建模；开拓者·毁灭终结技按单体模式（全胜•再见安打）计
+var CHAR_MULT = {
+acheron:[100,160,372], aglaea:[100,0,0], aha:[50,50,500], anaxa:[100,350,160], archer:[100,360,1000],
+argenti:[100,120,160], arlan:[100,240,320], asta:[100,250,0], aventurine:[100,0,270], bailu:[100,0,0],
+blackswan:[60,90,120], blade:[100,0,40], 'blade-m':[50,10,0], boothill:[100,0,400], bronya:[100,0,0],
+castorice:[50,50,0], cerydra:[100,0,240], cipher:[100,200,120], cyrene:[50,0,0], dahlia:[100,160,300],
+danheng:[100,260,400], dhil:[100,0,300], dhpt:[100,0,300], evernight:[50,0,200], feixiao:[100,200,700],
+firefly:[100,200,0], fugue:[100,0,200], fuxuan:[50,0,100], gallagher:[100,0,150], gepard:[100,200,0],
+gilgamesh:[100,280,400], guinaifen:[100,120,120], hanya:[100,240,0], herta:[100,100,200], himeko:[100,200,230],
+'himeko-nova':[100,0,762], hook:[100,240,400], huohuo:[50,0,0], hyacine:[50,0,0], hysilens:[100,140,200],
+jade:[90,0,240], jiaoqiu:[100,150,100], jingliu:[100,200,300], jingyuan:[100,100,200], kafka:[100,160,80],
+lingsha:[100,80,150], luka:[100,120,330], luocha:[100,0,200], lynx:[50,0,0], mar7:[100,0,150],
+mar7h:[100,0,240], misha:[100,200,180], moze:[100,150,270], mydei:[50,90,160], natasha:[100,0,0],
+pela:[100,210,100], phainon:[100,300,960], qingque:[100,0,200], rappa:[100,120,0], rin:[100,180,600],
+robin:[100,0,0], ruanmei:[100,0,0], saber:[100,150,280], sampo:[100,280,160], seele:[100,220,425],
+serval:[100,140,180], silverwolf:[100,196,380], sparkle:[100,0,0], sparxie:[100,0,null], sunday:[100,0,0],
+sushang:[100,210,320], sw999:[100,160,0], 'tb-dest':[100,125,450], 'tb-ela':[100,60,0], 'tb-harm':[100,250,0],
+'tb-pres':[100,0,100], 'tb-rem':[100,0,240], theherta:[100,70,200], tingyun:[100,0,0], topaz:[100,150,0],
+tribbie:[30,0,30], welt:[100,216,150], xueyi:[100,140,250], yanqing:[100,220,350], yaoguang:[90,0,0],
+yukong:[100,0,380], yunli:[100,120,220]
+};
+function multOf(ch){
+return (ch && ch.mult) || CHAR_MULT[ch.id] || [100, 200, 300];
+}
+// 倍率不按攻击力结算的角色：hp = 生命上限、def = 防御力、ela = 欢愉度（面板数值请填对应属性的近似值）
+var CHAR_DMG_STAT = { aventurine:'def', 'blade-m':'hp', castorice:'hp', cyrene:'hp', evernight:'hp', fuxuan:'hp', huohuo:'hp', hyacine:'hp', lynx:'hp', mydei:'hp', tribbie:'hp', aha:'ela' };
+// 终结技为全体攻击的角色（技能固定数据）：伤害与削韧按全体敌人结算
+var CHAR_ULT_AOE = { acheron:1, aha:1, anaxa:1, argenti:1, blackswan:1, cerydra:1, dahlia:1, dhpt:1, evernight:1, fugue:1, fuxuan:1, gallagher:1, gilgamesh:1, guinaifen:1, herta:1, himeko:1, 'himeko-nova':1, hysilens:1, jade:1, jiaoqiu:1, jingyuan:1, kafka:1, lingsha:1, luocha:1, mar7:1, pela:1, phainon:1, qingque:1, saber:1, sampo:1, serval:1, 'tb-pres':1, 'tb-rem':1, theherta:1, tribbie:1, welt:1 };
+// 角色属性（决定弱点击破伤害的属性倍率）：按游戏数据内置；未列入的角色（开拓者·欢愉、银狼 LV.999、千冶·刃、爻光、吉尔伽美什、远坂凛、星神★阿哈）属性未核实，其击破伤害不计算
+var CHAR_EL = {
+'tb-dest':'物理','tb-pres':'火','tb-harm':'虚数','tb-rem':'冰',
+mar7:'冰','mar7h':'虚数',evernight:'冰',danheng:'风',dhil:'虚数',dhpt:'物理',himeko:'火','himeko-nova':'火',welt:'虚数',seele:'量子',bronya:'风',gepard:'冰',natasha:'物理',bailu:'雷',luocha:'虚数',yanqing:'冰',jingyuan:'雷',silverwolf:'量子',kafka:'雷',blade:'风',jingliu:'冰',fuxuan:'量子',lynx:'量子',luka:'物理',topaz:'火',herta:'冰',theherta:'冰',asta:'火',arlan:'雷',pela:'冰',sampo:'风',serval:'雷',hook:'火',qingque:'量子',tingyun:'雷',sushang:'物理',yukong:'虚数',guinaifen:'火',hanya:'物理',xueyi:'量子',misha:'冰',acheron:'雷',blackswan:'风',sparkle:'量子',sparxie:'火',aventurine:'虚数',robin:'物理',boothill:'物理',firefly:'火',jade:'量子',yunli:'物理',jiaoqiu:'火',lingsha:'火',feixiao:'风',moze:'雷',rappa:'虚数',fugue:'火',gallagher:'火',ruanmei:'冰',huohuo:'风',argenti:'物理',sunday:'虚数',aglaea:'雷',tribbie:'量子',mydei:'虚数',castorice:'量子',hyacine:'风',anaxa:'风',cipher:'量子',phainon:'物理',cyrene:'冰',hysilens:'物理',cerydra:'风',dahlia:'火',saber:'风',archer:'量子'
+};
+// 弱点击破伤害（游戏公式）：等级基数（80 级 3767.55）× 属性击破倍率 ×（1 + 击破特攻）×（敌人最大韧性单位 + 2）÷ 4 × 防御乘区（本工具沿用敌方防御减伤 % 简化）；韧性单位 = 最大韧性 ÷ 10（普攻削韧 10 = 1 单位）
+var BREAK_BASE = 3767.55;
+var BREAK_EL_MULT = { '物理':2, '火':2, '风':1.5, '冰':1, '雷':1, '量子':0.5, '虚数':0.5 };
+function breakDmgOf(u, eUnit){
+if (!u || !eUnit) return 0;
+var m = BREAK_EL_MULT[u.el || ''];
+if (!m) return 0;
+return BREAK_BASE * m * (1 + (+u.be || 0) / 100) * (((+eUnit.tghMax || 30) / 10) + 2) / 4 * (1 - Math.min(95, Math.max(0, enemyDefPct)) / 100);
+}
+// 超击破伤害（游戏公式，两个独立来源交叉核对一致）：等级基数 3767.55 ×（本次行动削韧 ÷ 10）×（1 + 攻击者击破特攻）× 防御乘区（同击破伤害口径）；不乘属性击破倍率。触发：目标已处于击破状态、本次削韧 > 0、攻击者具备超击破
+function superBreakDmgOf(u, tghDmg){
+if (!u || !(tghDmg > 0)) return 0;
+return BREAK_BASE * (tghDmg / 10) * (1 + (+u.be || 0) / 100) * (1 - Math.min(95, Math.max(0, enemyDefPct)) / 100);
+}
+// 某编队下标的角色当前是否具备超击破（能力来源为角色固定数据，开关 / 对象是玩家决定，见 ally.sb）：流萤完全燃烧（自身）、忘归人战技赋予（指定队友）、同谐开拓者终结技赋予（全队）
+function sbCapableIdx(i){
+var a = allies[i];
+if (!a) return false;
+if (a.sb && a.sb.selfOn && a.charId === 'firefly') return true;
+for (var j = 0; j < allies.length; j++){
+var g = allies[j];
+if (!g || !g.sb) continue;
+if (g.charId === 'fugue' && g.sb.grantOn && g.sb.grantTarget === i) return true;
+if (g.charId === 'tb-harm' && g.sb.allOn) return true;
+}
+return false;
+}
+function charById(id){
+for (var i = 0; i < CHAR_DB.length; i++) if (CHAR_DB[i].id === id) return CHAR_DB[i];
+return null;
+}
+function allyFromChar(ch, panelSpd){
+return {
+charId: ch.id, name: ch.name, spd: panelSpd!= null? panelSpd: ch.spd,
+maxEnergy: ch.special? 0: ch.energy, startEnergy: ch.special? 0: (ch.start != null? ch.start: 0),
+basicRegen: ch.br != null? ch.br: 20, skillRegen: ch.sr != null? ch.sr: 30,
+advTarget:-1, advPct: ch.adv || 0, advMode: ch.adv? 'flex': 'fixed',
+spdBuff: ch.buff? { trig:ch.buff.trig, scope:ch.buff.scope, target:-1, val:ch.buff.val, dur:ch.buff.dur || 2, mode:(ch.buff.scope === 'target' && ch.buff.trig === 'skill')? 'flex': 'fixed' } : { trig:'', scope:'all', target:-1, val:0, dur:2, mode:'fixed' },
+ultAdv: ch.uadv? { scope:ch.uadv.scope, target:-1, pct:ch.uadv.pct, mode:'flex' } : { scope:'', target:-1, pct:0, mode:'fixed' },
+breakAdv: ch.brk? { on:false, pct:ch.brk, trig:'both', max:1 } : { on:false, pct:0, trig:'both', max:1 },
+sb:{ selfOn: ch.id === 'firefly', grantOn: ch.id === 'fugue', grantTarget:0, allOn: ch.id === 'tb-harm' },
+err:0, fu: ch.fu? { trig:ch.fu.trig || '', regen:ch.fu.regen || 0, tgh:ch.fu.tgh || 0, mult:ch.fu.mult || 0 } : { trig:'', regen:0, tgh:0, mult:0 }, tghBasic:tghOf(ch)[0], tghSkill:tghOf(ch)[1], tghUlt:tghOf(ch)[2], srFixed:!!ch.srFixed,
+atk:2500, multB:multOf(ch)[0] || 0, multS:multOf(ch)[1] || 0, multU:multOf(ch)[2] || 0, cr:50, cd:100, dmgB:0, be:0, ultScope: CHAR_ULT_AOE[ch.id]? 'all': 'single',
+special:!!ch.special, specialNote: ch.note || ''
+};
+}
+function fallbackAllyFor(list){
+var used = {}; (list || []).forEach(function(a){ if (a) used[a.charId] = 1; });
+for (var i = 0; i < CHAR_DB.length; i++){ if (!used[CHAR_DB[i].id]) return allyFromChar(CHAR_DB[i]); }
+return allyFromChar(CHAR_DB[0]);
+}
+function scopeName(s){
+return s === 'self'? '自己': s === 'others'? '除自己外全队': s === 'target'? '指定队友': '全队';
+}
+function trigName(t){
+return t === 'skill'? '战技触发': t === 'ult'? '终结技触发': t === 'both'? '战技 + 终结技触发': t === 'passive'? '常驻': '无';
+}
+
+// ---------- 当期高难敌人库（2026-11-18 核对） ----------
+// spd 为敌人在该关卡等级下的面板速度：星铁档案馆敌人基准速度 × 等级曲线（Lv.95 为 ×1.32）
+var MODES = [
+{ id:'moc', name:'混沌回忆', cycle:'物竞天择', period:'2026/11/02 – 12/14',
+buff:'本期环境与终结技 / 笑点联动；第 12 层按总轮次计星，排轴重点是每支队伍各自的动数分配。',
+stages:[
+{ id:'moc12a', label:'第 12 层 · 上半', weak:'推荐属性：火 / 风',
+enemies:[
+{ name:'摇滚狂徒', spd:174.2, tgh:120, weak:'物理 / 火 / 风', note:'第 1 波精英 · 未进入狂奏状态时会给其他敌人提速（未建模）'},
+{ name:'蚕食者之影', spd:227, tgh:100, weak:'火 / 雷 / 风', note:'第 1 波精英'},
+{ name:'步离战首·呼雷', spd:264, tgh:240, weak:'物理 / 火 / 风', note:'第 2 波 Boss · 进入月狂后还会大幅提速（未建模）'}
+]},
+{ id:'moc12b', label:'第 12 层 · 下半', weak:'推荐属性：量子 / 虚数',
+enemies:[
+{ name:'月夜天马', spd:132, tgh:160, weak:'火 / 量子 / 虚数', note:'第 1 波'},
+{ name:'正阳狮鹫', spd:158.4, tgh:160, weak:'物理 / 量子 / 虚数', note:'第 1 波'},
+{ name:'堕神之血·亚婆离', spd:237.6, tgh:360, weak:'冰 / 量子 / 虚数', note:'第 2 波 Boss'}
+]},
+{ id:'moc12s', label:'第 12 层 · 星启模式', weak:'推荐属性：物理 / 冰',
+enemies:[
+{ name:'金血忆灵•翼蛇形', spd:158.4, tgh:160, weak:'物理 / 火 / 冰', note:'星启节点'},
+{ name:'金人勾魂使', spd:158.4, tgh:100, weak:'物理 / 雷 / 虚数', note:'星启节点'},
+{ name:'金血忆灵•裁定忘却之形', spd:198, tgh:120, weak:'物理 / 冰 / 虚数', note:'星启节点'}
+]}
+]},
+{ id:'as', name:'末日幻影', cycle:'领航冥茫', period:'2026/11/16 – 12/28',
+buff:'拥有的敌方被弱点击破时，我方全体解控并激活终结技；敌方全体受到的战技伤害 +25%、欢愉伤害 +15%。按剩余行动值计分，越快结束分越高。',
+stages:[
+{ id:'as1', label:'节点一 · 含辛茹苦的列车长', weak:'弱点：虚数 / 火 / 物理 / 量子',
+enemies:[ { name:'含辛茹苦的列车长', spd:176.9, tgh:400, weak:'虚数 / 火 / 物理 / 量子', note:'Boss 幻影 · 合金机仆帕姆，会转移弱点给召唤物'}]},
+{ id:'as2', label:'节点二 · 枯茎朽骨的引路人', weak:'弱点：冰 / 风 / 量子 / 虚数',
+enemies:[ { name:'枯茎朽骨的引路人', spd:190.1, tgh:800, weak:'冰 / 风 / 量子 / 虚数', note:'Boss 幻影 · 玻吕刻斯，先击破召唤臂暴露弱点；死亡芬芳状态下还会提速'}]},
+{ id:'as3', label:'节点三 · 星启（银骑士）', weak:'弱点：物理 / 火 / 冰 / 虚数',
+enemies:[ { name:'芒寒色正的银骑士', spd:138.6, tgh:300, weak:'物理 / 火 / 冰 / 虚数', note:'Boss 幻影 · 银枝，会召唤枪与盾'}]}
+]},
+{ id:'pf', name:'虚构叙事', cycle:'取象为文', period:'2026/10/19 – 11/30',
+buff:'我方给敌方施加负面效果时额外累积战意值（每个敌方最多触发 10 次）。敌人分波次刷新、按击杀计分；下一期「虚事成理」11/30 开启。',
+stages:[
+{ id:'pf4a', label:'第 4 关 · 上半', weak:'推荐属性：冰 / 虚数',
+enemies:[
+{ name:'天谴先锋', spd:174.2, tgh:140, weak:'冰 / 雷 / 量子', note:'第 2 波精英'},
+{ name:'至黑之剑，盗火行者', spd:174.2, tgh:240, weak:'冰 / 雷 / 量子', note:'第 3 波 Boss'}
+]},
+{ id:'pf4b', label:'第 4 关 · 下半', weak:'推荐属性：火 / 虚数',
+enemies:[
+{ name:'惊梦剧团的甜猿泰山', spd:190.1, tgh:140, weak:'物理 / 火 / 虚数', note:'第 2 波精英'},
+{ name:'合金机铠•帕姆王', spd:158.4, tgh:200, weak:'火 / 雷 / 虚数', note:'第 3 波 Boss'}
+]},
+{ id:'pf4s', label:'第 4 关 · 星启模式', weak:'推荐属性：物理 / 冰',
+enemies:[
+{ name:'承露天人', spd:158.4, tgh:140, weak:'物理 / 冰 / 雷', note:'第 2 波精英'},
+{ name:'银枝', spd:190.1, tgh:160, weak:'物理 / 冰', note:'第 3 波 Boss'}
+]}
+]},
+{ id:'arb', name:'异相仲裁', cycle:'隐藏关卡', period:'4.7 版本期 · 敌人 Lv.120',
+buff:'每关带独立环境异常；仲裁敌人为 120 级，下方速度为 120 级面板值（游戏 Wiki 敌人属性表）。',
+stages:[
+{ id:'arb1', label:'骑士一 · 银枝', weak:'优势属性：冰 / 火 / 物理',
+enemies:[ { name:'银枝（骑士一）', spd:216, tgh:160, weak:'冰 / 火 / 物理', note:'环境「挑衅」：敌方受 6 次攻击后立即行动；会召唤小怪，注意弹射伤害被分摊'}]},
+{ id:'arb2', label:'骑士二 · 史瓦罗', weak:'优势属性：雷 / 火 / 虚数 / 风',
+enemies:[ { name:'史瓦罗（骑士二）', spd:180, tgh:140, weak:'雷 / 火 / 虚数 / 风', note:'环境「破势」「失能」：入战全队能量 −50%，回合外回能降低 50% 持续 2 回合'}]},
+{ id:'arb3', label:'骑士三 · 邪愿莲华主', weak:'优势属性：虚数 / 物理 / 雷 / 火',
+enemies:[ { name:'极乐颠倒•邪愿莲华主（骑士三）', spd:225, tgh:240, weak:'虚数 / 物理 / 雷 / 火', note:'环境「血嗜」：我方回合开始损失生命；留意「幸福」层数管理'}]},
+{ id:'arbk', label:'将杀王棋 · 无量塔绘世', weak:'优势属性：火 / 量子 / 雷',
+enemies:[ { name:'始作画者，无量塔绘世（将杀王棋）', spd:158.4, tgh:360, weak:'火 / 量子 / 雷', note:'环境「激怒」：我方每放 1 次终结技敌方速度 +30%（至多 4 层，回合开始清空）——该提速未建模，终结技多的轴请预留余量'}]}
+]}
+];
+function modeById(id){
+for (var i = 0; i < MODES.length; i++) if (MODES[i].id === id) return MODES[i];
+return null;
+}
+
+// ---------- 状态 ----------
+var ALLY_COLORS = ['#0b7370','#a87b12','#7a4fa3','#2f6fb2'];
+var ENEMY_COLOR = '#b42318';
+var allies = [
+allyFromChar(charById('firefly'), 154),
+allyFromChar(charById('sunday'), 134),
+allyFromChar(charById('ruanmei'), 144),
+allyFromChar(charById('huohuo'), 134)
+];
+allies[1].advTarget = 0; // 默认队演示：星期日战技 100% 拉条流萤，可在角色卡改对象或关掉
+var enemyMode = 'moc';
+var enemyStageId = 'moc12a';
+var enemies = []; // 当前生效的敌人列表（预置关卡为副本，可微调速度）
+var customEnemies = [
+{ name:'敌人 A', spd:120, tgh:30}, { name:'敌人 B', spd:100, tgh:30}, { name:'敌人 C', spd:90, tgh:30}
+];
+var customCount = 3;
+var tghOn = false; // 韧性条模拟开关（敌方区切换）
+var enemyDefPct = 40; // 伤害模型：敌方防御减伤 %（敌方区可调）
+var dmgMap = {}; // 手动推演：ally key -> 累计期望伤害
+var SUMMON_COLOR = '#b3541e';
+// 带召唤物的预置角色选入编队即自动带出其召唤物（名称 / 速度 / 削韧为角色固定数据，见 CHAR_DB 的 summon 字段）
+function autoSummons(){
+var out = [];
+allies.forEach(function(a, i){
+var ch = charById(a.charId);
+if (ch && ch.summon) out.push({ name:ch.summon.name, owner:i, spd: ch.summon.spdPct? Math.round((+a.spd || 0) * ch.summon.spdPct * 10) / 10: ch.summon.spd, regen:ch.summon.regen || 0, tgh:ch.summon.tgh || 0, mult:ch.summon.mult || 0, auto:true });
+});
+return out;
+}
+function allSummons(){ return autoSummons(); }
+
+function currentStage(){
+var m = modeById(enemyMode); if (!m) return null;
+for (var i = 0; i < m.stages.length; i++) if (m.stages[i].id === enemyStageId) return m.stages[i];
+return m.stages[0];
+}
+function loadStageEnemies(){
+if (enemyMode === 'custom'){
+enemies = customEnemies.slice(0, customCount).map(function(e){ return { name:e.name, spd:e.spd, tgh:(e.tgh != null? e.tgh: 30), custom:true};});
+} else {
+var st = currentStage();
+enemies = st.enemies.map(function(e){
+return { name:e.name, spd:e.spd, tgh:(e.tgh != null? e.tgh: 30), weak:e.weak, note:e.note, custom:false};
+});
+}
+}
+
+// ---------- 推演状态 ----------
+var units = [];
+var nextAt = {};
+var energy = {};
+var sp = 3, SP_MAX = 5;
+var elapsed = 0, step = 0;
+var actLog = [];
+var snapshots = [];
+var breakUsed = {}; // key -> 本场已触发的击破自拉条次数
+var tghCur = {}; // 韧性模拟：ekey -> 当前韧性
+var tghBroken = {}; // 韧性模拟：ekey -> 是否处于击破状态
+
+function buildUnits(){
+units = [];
+allies.forEach(function(a, i){
+units.push({ key:'a'+i, type:'ally', idx:i, name:a.name || ('角色 '+(i+1)), spd:Math.max(1,+a.spd||1),
+color:ALLY_COLORS[i], maxEnergy:Math.max(0,+a.maxEnergy||0),
+basicRegen:+a.basicRegen||0, skillRegen:+a.skillRegen||0,
+advTarget:(a.advTarget!= null? a.advTarget: -1), advPct:+a.advPct||0, advMode: a.advMode || 'fixed',
+spdBuff: a.spdBuff? { trig:a.spdBuff.trig || '', scope:a.spdBuff.scope || 'all', target:(a.spdBuff.target!= null? a.spdBuff.target: -1), val:+a.spdBuff.val || 0, dur:Math.max(1, +a.spdBuff.dur || 2), mode:a.spdBuff.mode || 'fixed' } : { trig:'', scope:'all', target:-1, val:0, dur:2, mode:'fixed' },
+ultAdv: a.ultAdv? { scope:a.ultAdv.scope || '', target:(a.ultAdv.target!= null? a.ultAdv.target: -1), pct:+a.ultAdv.pct || 0, mode:a.ultAdv.mode || 'fixed' } : { scope:'', target:-1, pct:0, mode:'fixed' },
+breakAdv: a.breakAdv? { on:!!a.breakAdv.on, pct:+a.breakAdv.pct || 0, trig:a.breakAdv.trig || 'both', max:Math.max(1, +a.breakAdv.max || 1) } : { on:false, pct:0, trig:'both', max:1 },
+err:+a.err || 0, killRegen:10, fu: a.fu? { trig:a.fu.trig || '', regen:+a.fu.regen || 0, tgh:+a.fu.tgh || 0, mult:+a.fu.mult || 0 } : { trig:'', regen:0, tgh:0, mult:0 }, tghBasic:+a.tghBasic || 0, tghSkill:+a.tghSkill || 0, tghUlt:+a.tghUlt || 0, srFixed:!!a.srFixed,
+atk:+a.atk || 0, multB:+a.multB || 0, multS:+a.multS || 0, multU:+a.multU || 0, cr:+a.cr || 0, cd:+a.cd || 0, dmgB:+a.dmgB || 0, be:+a.be || 0, el:(CHAR_EL[a.charId] || ''), ultScope:a.ultScope || 'single',
+special:!!a.special, specialNote:a.specialNote || ''});
+});
+enemies.forEach(function(e, i){
+units.push({ key:'e'+i, type:'enemy', idx:i, name:e.name || ('敌人 '+(i+1)), spd:Math.max(1,+e.spd||1), tghMax:Math.max(1, +e.tgh || 30), color:ENEMY_COLOR});
+});
+allSummons().forEach(function(s, j){
+units.push({ key:'s'+j, type:'summon', idx:j, name:s.name || ('召唤物 '+(j+1)), spd:Math.max(1,+s.spd||1), owner:(s.owner != null? s.owner: 0), fuRegen:+s.regen || 0, tghDmg:+s.tgh || 0, mult:+s.mult || 0, color:SUMMON_COLOR });
+});
+}
+// ---------- 持续加速（速度增益）引擎 ----------
+// buffs: key -> [{v:速度增益值, left:还剩几次受益者自身行动, src:来源标识（同来源重复施加只刷新不叠加）}]
+var buffs = {};
+function bSumMap(bmap, key){
+var s = 0, l = bmap[key] || [];
+for (var i = 0; i < l.length; i++) s += l[i].v;
+return s;
+}
+function effSpdMap(umap, bmap, key){ return umap[key].spd + bSumMap(bmap, key);}
+function unitMapBuild(){
+var m = {};
+units.forEach(function(u){ m[u.key] = u;});
+return m;
+}
+// 有效回能：充能效率按百分比放大普攻 / 战技回能；固定回能（如流萤战技按上限 60%）不吃充能
+function effRegen(u, kind){
+var base = kind === 'basic'? (u.basicRegen || 0): (u.skillRegen || 0);
+if (kind === 'skill' && u.srFixed) return base;
+return base * (1 + (+u.err || 0) / 100);
+}
+// 期望伤害：攻击力 × 倍率% ×（1 + 增伤%）×（1 + 暴击率% × 暴击伤害%）×（1 − 敌方防御减伤%）× 目标数
+function dmgOf(u, multPct, targets){
+if (!u || !(multPct > 0) || !(u.atk > 0)) return 0;
+var n = Math.max(1, targets || 1);
+return u.atk * (multPct / 100) * (1 + (u.dmgB || 0) / 100) * (1 + (u.cr || 0) / 100 * ((u.cd || 0) / 100)) * (1 - Math.min(95, Math.max(0, enemyDefPct)) / 100) * n;
+}
+function fmtDmg(v){ return Math.round(v).toLocaleString('en-US');}
+function recipientsOf(casterIdx, scope, target){
+var out = [], i;
+if (scope === 'self') out = [casterIdx];
+else if (scope === 'all'){ for (i = 0; i < allies.length; i++) out.push(i);}
+else if (scope === 'others'){ for (i = 0; i < allies.length; i++) if (i!== casterIdx) out.push(i);}
+else if (scope === 'target' && target != null && target >= 0) out = [target];
+return out;
+}
+// 给 key 挂加速：挂上瞬间按新旧有效速度比例折算其当前剩余 AV（保留已推进的进度比例）；同来源已有增益则刷新数值与次数
+function addBuffG(tMap, bmap, umap, key, val, dur, now, src){
+if (!(val > 0) || !(dur > 0)) return false;
+var oldEff = effSpdMap(umap, bmap, key);
+var list = bmap[key] || (bmap[key] = []);
+var found = null;
+list.forEach(function(e){ if (e.src === src) found = e;});
+if (found){ found.v = val; found.left = dur;}
+else list.push({ v:val, left:dur, src:src });
+var newEff = effSpdMap(umap, bmap, key);
+if (tMap[key] != null && newEff!== oldEff){
+tMap[key] = now + (tMap[key] - now) * oldEff / newEff;
+if (tMap[key] < now) tMap[key] = now;
+}
+return true;
+}
+// 受益者完成一次行动后，其身上的增益次数 -1，到期移除
+function expireG(bmap, key){
+var l = bmap[key];
+if (!l || !l.length) return;
+l.forEach(function(e){ e.left--;});
+bmap[key] = l.filter(function(e){ return e.left > 0;});
+}
+// 常驻增益（天赋类，如阮·梅）：开局即挂上，次数视为无限
+function applyPassiveG(tMap, bmap, umap){
+units.forEach(function(u){
+if (u.type!== 'ally') return;
+var b = u.spdBuff;
+if (b && b.trig === 'passive' && b.val > 0){
+recipientsOf(u.idx, b.scope, b.target).forEach(function(ai){
+addBuffG(tMap, bmap, umap, 'a' + ai, b.val, 9999, 0, 'a' + u.idx + '-passive');
+});
+}
+});
+}
+function recipientsWithOverride(casterIdx, scope, target, override){
+if (scope === 'target' && override != null && override >= 0) return [override];
+return recipientsOf(casterIdx, scope, target);
+}
+// 施加一次「触发型」加速（战技或终结技），返回说明文字（无受益者时返回空）；targetOverride 为本次施放现选的对象（范围为指定队友时生效）
+function applyTrigBuffG(tMap, bmap, umap, caster, trigKind, now, targetOverride){
+var b = caster.spdBuff;
+if (!b || !(b.val > 0)) return '';
+if (!(b.trig === trigKind || b.trig === 'both')) return '';
+var names = [];
+recipientsWithOverride(caster.idx, b.scope, b.target, targetOverride).forEach(function(ai){
+if (addBuffG(tMap, bmap, umap, 'a' + ai, b.val, b.dur, now, 'a' + caster.idx + '-' + trigKind)) names.push(allies[ai].name || ('角色 ' + (ai + 1)));
+});
+if (!names.length) return '';
+return '加速 +' + b.val + ' → ' + names.join('、') + '（持续 ' + b.dur + ' 次行动）';
+}
+// 施加终结技拉条，返回说明文字；targetOverride 为本次施放现选的对象（范围为指定队友时生效）
+function applyUltAdvG(tMap, bmap, umap, caster, now, targetOverride){
+var ua = caster.ultAdv;
+if (!ua || !ua.scope || !(ua.pct > 0)) return '';
+var names = [];
+recipientsWithOverride(caster.idx, ua.scope, ua.target, targetOverride).forEach(function(ai){
+var k = 'a' + ai;
+tMap[k] = Math.max(now, tMap[k] - avOf(effSpdMap(umap, bmap, k)) * ua.pct / 100);
+names.push(allies[ai].name || ('角色 ' + (ai + 1)));
+});
+if (!names.length) return '';
+return '终结技拉条 ' + names.join('、') + ' ' + ua.pct + '%';
+}
+function initTgh(){
+tghCur = {}; tghBroken = {};
+enemies.forEach(function(e, i){ tghCur['e' + i] = Math.max(1, +e.tgh || 30); tghBroken['e' + i] = false;});
+}
+// 韧性模拟（手动推演）：自动目标 = 未击破且韧性最低的敌人 key
+function pickTargetKeyManual(){
+var best = null;
+units.forEach(function(x){
+if (x.type!== 'enemy' || tghBroken[x.key]) return;
+if (!best || (tghCur[x.key] || 0) < (tghCur[best] || 0)) best = x.key;
+});
+if (!best) units.forEach(function(x){ if (x.type === 'enemy' && !best) best = x.key;});
+return best;
+}
+// 对指定敌人造成削韧（手动推演全局状态版）：击破则延后其下一次行动 25%，返回是否击破
+function tghHitManual(key, dmg){
+var tu = null;
+units.forEach(function(x){ if (x.key === key) tu = x;});
+if (!tu || tghBroken[key] || !(dmg > 0)) return false;
+tghCur[key] = Math.max(0, (tghCur[key] != null? tghCur[key]: tu.tghMax) - dmg);
+if (tghCur[key] <= 0){ tghBroken[key] = true; nextAt[key] += avOf(tu.spd) * 0.25; return true;}
+return false;
+}
+// 结算一次追加攻击 / 反击（手动推演）：追击者回能 + 对 targetKey（为空则自动选韧性最低的敌人）削韧，返回记录说明（无效果返回空）
+function fuApplyManual(f, targetKey){
+var parts = [];
+if ((f.fu.mult || 0) > 0){ var fd = dmgOf(f, f.fu.mult, 1); if (fd > 0){ dmgMap[f.key] = (dmgMap[f.key] || 0) + fd; parts.push('伤害 ≈' + fmtDmg(fd));}}
+if (!f.special && (f.fu.regen || 0) > 0){ energy[f.key] = Math.min(f.maxEnergy, energy[f.key] + f.fu.regen); parts.push('回能 +' + f.fu.regen);}
+if (tghOn && (f.fu.tgh || 0) > 0){
+var tk = targetKey || pickTargetKeyManual();
+if (tk){
+var tu = null; units.forEach(function(x){ if (x.key === tk) tu = x;});
+if (tu && !tghBroken[tk]){
+var brk = tghHitManual(tk, f.fu.tgh);
+parts.push('削韧 ' + tu.name + ' ' + f.fu.tgh + (brk? '（击破，行动延后 25%）': ''));
+if (brk){ var bdF = breakDmgOf(f, tu); if (bdF > 0){ dmgMap[f.key] = (dmgMap[f.key] || 0) + bdF; parts.push('击破伤害 ≈' + fmtDmg(bdF)); } }
+} else if (tu && tghBroken[tk] && sbCapableIdx(f.idx)){
+var sbF = superBreakDmgOf(f, f.fu.tgh);
+if (sbF > 0){ dmgMap[f.key] = (dmgMap[f.key] || 0) + sbF; parts.push('超击破伤害 ≈' + fmtDmg(sbF)); }
+}
+}
+}
+return parts.length? ('追击 · ' + f.name + '（' + parts.join('、') + '）'): '';
+}
+function resetSim(){
+buildUnits();
+nextAt = {}; energy = {}; buffs = {};
+units.forEach(function(u){ nextAt[u.key] = avOf(u.spd); buffs[u.key] = [];});
+applyPassiveG(nextAt, buffs, unitMapBuild());
+breakUsed = {}; allies.forEach(function(a, i){ breakUsed['a'+i] = 0;});
+dmgMap = {}; allies.forEach(function(a, i){ dmgMap['a'+i] = 0;});
+initTgh();
+allies.forEach(function(a, i){
+energy['a'+i] = a.special? 0: Math.min(+a.maxEnergy||120, Math.max(0, +a.startEnergy||0));
+});
+sp = 3; elapsed = 0; step = 0; actLog = []; snapshots = [];
+renderAll();
+}
+function nextUnit(){
+var best = null;
+units.forEach(function(u){
+if (best === null || nextAt[u.key] < nextAt[best.key] - 1e-9) best = u;
+});
+return best;
+}
+function snapshot(){
+snapshots.push(JSON.stringify({ nextAt:nextAt, energy:energy, sp:sp, elapsed:elapsed, step:step, actLog:actLog, buffs:buffs, breakUsed:breakUsed, tghCur:tghCur, tghBroken:tghBroken, dmgMap:dmgMap }));
+}
+function doAction(kind, opts){
+opts = opts || {};
+var u = nextUnit(); if (!u) return;
+if (u.type === 'ally' && kind === 'skill' && sp <= 0) return;
+if (u.type === 'ally' && kind!== 'basic' && kind!== 'skill') return;
+if (u.type === 'enemy' && kind!== 'enemy') return;
+if (u.type === 'summon' && kind!== 'summon') return;
+snapshot();
+var umap = unitMapBuild();
+var av = nextAt[u.key], cyc = cycleOf(av);
+// 本次行动间隔已在增益下走完：行动者身上的增益次数先扣减到期，再结算本次行动
+if (u.type === 'ally') expireG(buffs, u.key);
+var label = '行动';
+if (u.type === 'summon') label = '召唤物行动';
+if (u.type === 'ally'){
+if (kind === 'basic'){
+sp = Math.min(SP_MAX, sp + 1);
+if (!u.special) energy[u.key] = Math.min(u.maxEnergy, energy[u.key] + effRegen(u, 'basic'));
+label = '普攻';
+} else {
+sp = Math.max(0, sp - 1);
+if (!u.special) energy[u.key] = Math.min(u.maxEnergy, energy[u.key] + effRegen(u, 'skill'));
+label = '战技';
+}
+}
+actLog.push({ av:av, cycle:cyc, who:u.name, what:label, spAfter: u.type==='ally'? sp: null, ult:false});
+elapsed = av; step++;
+nextAt[u.key] = av + avOf(effSpdMap(umap, buffs, u.key));
+// 韧性模拟：我方普攻 / 战技削减目标韧性，击破使该敌方下一次行动延后 25%；敌方行动后若处于击破状态则韧性恢复（敌方行动只作时间标记，不产生回能）
+var brokeNow = false, tghNote = '';
+if (tghOn && u.type === 'ally' && (kind === 'basic' || kind === 'skill')){
+var ti2 = (opts.target != null? opts.target: 0);
+var tu2 = null;
+units.forEach(function(x){ if (x.type === 'enemy' && x.idx === ti2) tu2 = x;});
+if (!tu2) units.forEach(function(x){ if (x.type === 'enemy' && !tu2) tu2 = x;});
+if (tu2 && !tghBroken[tu2.key]){
+var dmg2 = kind === 'basic'? (u.tghBasic || 0): (u.tghSkill || 0);
+if (dmg2 > 0){
+tghCur[tu2.key] = Math.max(0, (tghCur[tu2.key] != null? tghCur[tu2.key]: tu2.tghMax) - dmg2);
+if (tghCur[tu2.key] <= 0){
+tghBroken[tu2.key] = true;
+nextAt[tu2.key] += avOf(tu2.spd) * 0.25;
+brokeNow = true;
+tghNote = '击破 ' + tu2.name + ' 韧性（行动延后 25%）';
+var bdA = breakDmgOf(u, tu2);
+if (bdA > 0){ dmgMap[u.key] = (dmgMap[u.key] || 0) + bdA; tghNote += '；击破伤害 ≈' + fmtDmg(bdA); }
+}
+}
+} else if (tu2 && tghBroken[tu2.key]){
+var dmg2s = kind === 'basic'? (u.tghBasic || 0): (u.tghSkill || 0);
+if (dmg2s > 0 && sbCapableIdx(u.idx)){ var sbA = superBreakDmgOf(u, dmg2s); if (sbA > 0){ dmgMap[u.key] = (dmgMap[u.key] || 0) + sbA; tghNote = '超击破伤害 ≈' + fmtDmg(sbA) + '（' + tu2.name + ' 已击破）'; } }
+}
+}
+if (u.type === 'enemy'){
+var eNotes = [];
+if (tghOn && tghBroken[u.key]){ tghBroken[u.key] = false; tghCur[u.key] = u.tghMax; eNotes.push('韧性恢复');}
+units.forEach(function(x){ if (x.type === 'ally' && x.fu && x.fu.trig === 'enemy'){ var fn = fuApplyManual(x, u.key); if (fn) eNotes.push(fn);}});
+if (eNotes.length) actLog[actLog.length - 1].note = eNotes.join('；');
+}
+if (u.type === 'summon'){
+var sNotes = [];
+var ownerU = umap['a' + u.owner];
+if (ownerU && (u.mult || 0) > 0){ var sd = dmgOf(ownerU, u.mult, 1); if (sd > 0){ dmgMap[ownerU.key] = (dmgMap[ownerU.key] || 0) + sd; sNotes.push('伤害 ≈' + fmtDmg(sd) + '（计入归属 ' + ownerU.name + '）');}}
+if (ownerU && !ownerU.special && (u.fuRegen || 0) > 0){ energy[ownerU.key] = Math.min(ownerU.maxEnergy, energy[ownerU.key] + u.fuRegen); sNotes.push('归属 ' + ownerU.name + ' 回能 +' + u.fuRegen);}
+if (tghOn && (u.tghDmg || 0) > 0){
+var tkS = pickTargetKeyManual();
+if (tkS){ var tuS = umap[tkS]; var wasBrkS = !!tghBroken[tkS];
+if (wasBrkS){ if (ownerU && sbCapableIdx(u.owner)){ var sbSm = superBreakDmgOf(ownerU, u.tghDmg); if (sbSm > 0){ dmgMap[ownerU.key] = (dmgMap[ownerU.key] || 0) + sbSm; sNotes.push('超击破伤害 ≈' + fmtDmg(sbSm) + '（计入归属 ' + ownerU.name + '）'); } } }
+else { var brkSm = tghHitManual(tkS, u.tghDmg); sNotes.push('削韧 ' + (tuS? tuS.name: '') + ' ' + u.tghDmg + (brkSm? '（击破，行动延后 25%）': ''));
+if (brkSm && ownerU && tuS){ var bdSm = breakDmgOf(ownerU, tuS); if (bdSm > 0){ dmgMap[ownerU.key] = (dmgMap[ownerU.key] || 0) + bdSm; sNotes.push('击破伤害 ≈' + fmtDmg(bdSm) + '（计入归属 ' + ownerU.name + '）'); } } }
+}
+}
+if (sNotes.length) actLog[actLog.length - 1].note = sNotes.join('；');
+}
+var breakNote = '';
+if (u.type === 'ally' && (kind === 'basic' || kind === 'skill') && (tghOn? brokeNow: opts.breakTrigger) && u.breakAdv && u.breakAdv.on && u.breakAdv.pct > 0 && (u.breakAdv.trig === 'both' || u.breakAdv.trig === kind) && (breakUsed[u.key] || 0) < u.breakAdv.max){
+breakUsed[u.key] = (breakUsed[u.key] || 0) + 1;
+nextAt[u.key] = Math.max(av, nextAt[u.key] - avOf(effSpdMap(umap, buffs, u.key)) * u.breakAdv.pct / 100);
+breakNote = '击破自拉条 ' + u.breakAdv.pct + '%（第 ' + breakUsed[u.key] + ' 次）';
+}
+if (u.type === 'ally' && kind === 'skill'){
+var notes = [];
+var buffNote = applyTrigBuffG(nextAt, buffs, umap, u, 'skill', av, opts.buffTarget);
+if (buffNote) notes.push(buffNote);
+var effAdvTarget = (u.advMode === 'flex' && opts.advTarget != null)? opts.advTarget: u.advTarget;
+if (effAdvTarget != null && effAdvTarget >= 0 && u.advPct > 0){
+var advKey = 'a' + effAdvTarget, advUnit = umap[advKey];
+if (advUnit){
+nextAt[advKey] = Math.max(av, nextAt[advKey] - avOf(effSpdMap(umap, buffs, advKey)) * u.advPct / 100);
+notes.push('拉条 ' + advUnit.name + ' ' + u.advPct + '%');
+}
+}
+if (notes.length) actLog[actLog.length - 1].note = notes.join('；');
+}
+if (breakNote){
+var le = actLog[actLog.length - 1];
+le.note = le.note? le.note + '；' + breakNote: breakNote;
+}
+if (tghNote){
+var le2 = actLog[actLog.length - 1];
+le2.note = le2.note? le2.note + '；' + tghNote: tghNote;
+}
+// 击杀回能：本次行动被标记击杀敌人时，全队每人按各自所填的击杀回能获得能量（本工具不建模敌人退场 / 波次补怪，敌人仍留在序列里）
+if (u.type === 'ally' && (kind === 'basic' || kind === 'skill') && opts.kill){
+var kParts = [];
+units.forEach(function(x){ if (x.type === 'ally' && !x.special && (x.killRegen || 0) > 0){ energy[x.key] = Math.min(x.maxEnergy, energy[x.key] + x.killRegen); kParts.push(x.name + ' +' + x.killRegen);}});
+var le3 = actLog[actLog.length - 1];
+var kn = '击杀敌人' + (kParts.length? ' · 击杀回能（' + kParts.join('、') + '）': '');
+le3.note = le3.note? le3.note + '；' + kn: kn;
+}
+// 追加攻击：队友（不含行动者本人）配置了「队友行动后追击」时，在本次普攻 / 战技后各追击一次；追击不连锁触发
+if (u.type === 'ally' && (kind === 'basic' || kind === 'skill')){
+var fuParts = [];
+units.forEach(function(x){
+if (x.type!== 'ally' || x.key === u.key || !x.fu || x.fu.trig!== 'ally') return;
+var fn = fuApplyManual(x, (tghOn? 'e' + (opts.target != null? opts.target: 0): null));
+if (fn) fuParts.push(fn);
+});
+if (fuParts.length){
+var le4 = actLog[actLog.length - 1];
+le4.note = le4.note? le4.note + '；' + fuParts.join('；'): fuParts.join('；');
+}
+}
+// 期望伤害结算：普攻 / 战技打向所选目标（单体），记入行动者累计伤害并标注
+if (u.type === 'ally' && (kind === 'basic' || kind === 'skill')){
+var actDmg = dmgOf(u, kind === 'basic'? u.multB: u.multS, 1);
+if (actDmg > 0){
+dmgMap[u.key] = (dmgMap[u.key] || 0) + actDmg;
+var le5 = actLog[actLog.length - 1];
+var dn = '伤害 ≈' + fmtDmg(actDmg);
+le5.note = le5.note? le5.note + '；' + dn: dn;
+}
+}
+renderAll();
+}
+function doUlt(key, opts){
+opts = opts || {};
+// 手动释放且未指定对象时，读能量面板上本次现选的下拉（灵活方式 + 指定队友范围才有）；搜索回放（fromPlan）按轴里记录的对象走，不读下拉
+if (!opts.fromPlan && opts.buffTarget == null){ var bs = document.getElementById('ultBuffSel-' + key); if (bs) opts.buffTarget = parseInt(bs.value, 10);}
+if (!opts.fromPlan && opts.advTarget == null){ var as = document.getElementById('ultAdvSel-' + key); if (as) opts.advTarget = parseInt(as.value, 10);}
+var u = null;
+units.forEach(function(x){ if (x.key === key) u = x;});
+if (!u || u.type!== 'ally' || u.special || energy[key] < u.maxEnergy) return;
+snapshot();
+var umap = unitMapBuild();
+energy[key] = 0;
+var notes = [];
+var buffNote = applyTrigBuffG(nextAt, buffs, umap, u, 'ult', elapsed, (u.spdBuff && u.spdBuff.mode === 'flex')? opts.buffTarget: null);
+if (buffNote) notes.push(buffNote);
+var advNote = applyUltAdvG(nextAt, buffs, umap, u, elapsed, (u.ultAdv && u.ultAdv.mode === 'flex')? opts.advTarget: null);
+if (advNote) notes.push(advNote);
+// 韧性模拟：终结技削韧作用于全体敌人；未击破者按削韧判定击破，已击破者结算超击破
+if (tghOn && (u.tghUlt || 0) > 0){
+units.forEach(function(x){
+if (x.type!== 'enemy') return;
+if (tghBroken[x.key]){
+if (sbCapableIdx(u.idx)){ var sbU = superBreakDmgOf(u, u.tghUlt); if (sbU > 0){ dmgMap[key] = (dmgMap[key] || 0) + sbU; notes.push('超击破伤害 ≈' + fmtDmg(sbU) + '（' + x.name + ' 已击破）'); } }
+return;
+}
+tghCur[x.key] = Math.max(0, (tghCur[x.key] != null? tghCur[x.key]: x.tghMax) - u.tghUlt);
+if (tghCur[x.key] <= 0){
+tghBroken[x.key] = true;
+nextAt[x.key] += avOf(x.spd) * 0.25;
+notes.push('终结技击破 ' + x.name + ' 韧性（行动延后 25%）');
+var bdU = breakDmgOf(u, x);
+if (bdU > 0){ dmgMap[key] = (dmgMap[key] || 0) + bdU; notes.push('击破伤害 ≈' + fmtDmg(bdU)); }
+}
+});
+}
+var ultTargets = u.ultScope === 'all'? Math.max(1, enemies.length): 1;
+var ultDmg = dmgOf(u, u.multU, ultTargets);
+if (ultDmg > 0){ dmgMap[key] = (dmgMap[key] || 0) + ultDmg; notes.push('伤害 ≈' + fmtDmg(ultDmg) + (u.ultScope === 'all'? '（全体 ' + ultTargets + ' 个敌人合计）': ''));}
+var entry = { av:elapsed, cycle:cycleOf(Math.max(elapsed, 0.0001)), who:u.name, what:'终结技（插队）', spAfter:null, ult:true};
+if (notes.length) entry.note = notes.join('；');
+actLog.push(entry);
+renderAll();
+}
+function undo(){
+if (!snapshots.length) return;
+var s = JSON.parse(snapshots.pop());
+nextAt = s.nextAt; energy = s.energy; sp = s.sp; elapsed = s.elapsed; step = s.step; actLog = s.actLog; buffs = s.buffs || {}; breakUsed = s.breakUsed || {}; tghCur = s.tghCur || {}; tghBroken = s.tghBroken || {}; dmgMap = s.dmgMap || {};
+renderAll();
+}
+function pureSequence(n){
+var t = {};
+units.forEach(function(u){ t[u.key] = avOf(u.spd);});
+var out = [];
+for (var i = 0; i < n; i++){
+var best = null;
+units.forEach(function(u){ if (best === null || t[u.key] < t[best.key] - 1e-9) best = u;});
+out.push({ unit:best, av:t[best.key], cycle:cycleOf(t[best.key])});
+t[best.key] += avOf(best.spd);
+}
+return out;
+}
+
+// ---------- 渲染：设置区 ----------
+function charOptions(selectedId){
+var html = '';
+CHAR_DB.forEach(function(c){
+html += '<option value="' + c.id + '"' + (selectedId === c.id? ' selected': '') + '>' + escapeHtml(c.name) + '</option>';
+});
+return html;
+}
+function renderSetup(){
+var tg = $('teamGrid'); tg.innerHTML = '';
+allies.forEach(function(a, i){
+var av = avOf(Math.max(1,+a.spd||1));
+var b150 = actionsWithin(+a.spd||1, 150), b250 = actionsWithin(+a.spd||1, 250);
+var ch = charById(a.charId);
+var card = document.createElement('div');
+card.className = 'card ally';
+var head = '';
+head = '<div class="preset-name">' + escapeHtml(a.name) + '</div>';
+var meta = '';
+if (ch){
+var tgA = tghOf(ch);
+var tghTxt = ' · 削韧 普攻 <b>' + tgA[0] + '</b> / 战技 <b>' + tgA[1] + '</b> / 终结技 <b>' + tgA[2] + '</b>';
+if (ch.special){
+meta = '<div class="preset-meta">基础速度 <b>' + ch.spd + '</b>' + tghTxt + ' · <b>特殊机制</b>：' + escapeHtml(ch.specialNote) + '</div>';
+} else {
+meta = '<div class="preset-meta">基础速度 <b>' + ch.spd + '</b> · 能量上限 <b>' + ch.energy + '</b>' + (ch.start? ' · 初始能量 <b>' + ch.start + '</b>': '') + ' · 普攻回能 <b>' + (ch.br != null? ch.br: 20) + '</b> · 战技回能 <b>' + (ch.sr != null? ch.sr: 30) + '</b>' + tghTxt +
+(ch.note? '<br />' + escapeHtml(ch.note): '') + '</div>';
+}
+}
+var advOpts = '<option value="-1"' + (a.advTarget === -1 || a.advTarget == null? ' selected': '') + '>无（不拉条）</option>';
+allies.forEach(function(t, j){
+advOpts += '<option value="' + j + '"' + (a.advTarget === j? ' selected': '') + '>' + escapeHtml(t.name || ('角色 ' + (j + 1))) + (j === i? '（自己）': '') + '</option>';
+});
+var advModeOpts = '<option value="fixed"' + (a.advMode !== 'flex'? ' selected': '') + '>固定对象（每次都拉同一人）</option>' +
+'<option value="flex"' + (a.advMode === 'flex'? ' selected': '') + '>灵活（每次可换人，搜索自动选最优）</option>';
+var targetOpts = function(sel){
+var h = '<option value="-1"' + (sel === -1 || sel == null? ' selected': '') + '>未选择</option>';
+allies.forEach(function(t, j){
+h += '<option value="' + j + '"' + (sel === j? ' selected': '') + '>' + escapeHtml(t.name || ('角色 ' + (j + 1))) + (j === i? '（自己）': '') + '</option>';
+});
+return h;
+};
+var cmA = CHAR_MULT[a.charId] || [a.multB, a.multS, a.multU];
+var statA = CHAR_DMG_STAT[a.charId];
+var statNameA = statA === 'hp'? '生命上限': statA === 'def'? '防御力': statA === 'ela'? '欢愉度': '攻击力';
+var elA = CHAR_EL[a.charId] || '';
+var dmgPresetBlock =
+'<div class="adv"><div class="adv-title">伤害参数（期望伤害模型）</div>' +
+'<div class="preset-meta">技能倍率是角色固定数据、已按满级技能真实倍率内置：普攻 <b>' + (cmA[0] == null? '未核实': cmA[0] + '%') + '</b> / 战技 <b>' + (cmA[1] == null? '未核实': cmA[1] + '%') + '</b> / 终结技 <b>' + (cmA[2] == null? '未核实': cmA[2] + '%') + '</b>（终结技' + (a.ultScope === 'all'? '全体': '单体') + '）——由技能本身决定，不用填。' + (statA? '该角色倍率按<b>' + statNameA + '</b>结算（不按攻击力），下方数值请填' + statNameA + '的近似值。': '') + '标「未核实」的倍率无可靠固定值，伤害按 0 计。下面能改的只有你的面板：</div>' +
+'<div class="num-row">' +
+'<div><label>' + statNameA + '（面板）</label><input type="number" min="0" max="30000" step="1" data-kind="ally-atk" data-i="'+i+'" value="'+(a.atk != null? a.atk: 2500)+'" /></div>' +
+'<div><label>增伤 %</label><input type="number" min="0" max="500" step="1" data-kind="ally-db" data-i="'+i+'" value="'+(a.dmgB || 0)+'" /></div>' +
+'</div>' +
+'<div class="num-row">' +
+'<div><label>暴击率 %</label><input type="number" min="0" max="100" step="0.1" data-kind="ally-cr" data-i="'+i+'" value="'+(a.cr != null? a.cr: 50)+'" /></div>' +
+'<div><label>暴击伤害 %</label><input type="number" min="0" max="600" step="1" data-kind="ally-cd" data-i="'+i+'" value="'+(a.cd != null? a.cd: 100)+'" /></div>' +
+'</div>' +
+'<div class="num-row">' +
+'<div><label>击破特攻 %（面板）</label><input type="number" min="0" max="1000" step="0.1" data-kind="ally-be" data-i="'+i+'" value="'+(a.be || 0)+'" /></div>' +
+'<div><label>属性 · 击破倍率（固定数据）</label><div class="preset-meta" style="margin-top:6px">' + (elA? ('<b>' + elA + '</b> · 击破倍率 <b>' + Math.round(BREAK_EL_MULT[elA] * 100) + '%</b>'): '未核实（击破伤害暂不计算）') + '</div></div>' +
+'</div>' +
+'<div class="preset-meta" style="margin-top:4px">击破 / 超击破公式见页脚；不算击破持续伤害。</div>' +
+'</div>';
+// ===== 预置角色卡：固定数据（能量 / 回能 / 削韧 / 机制数值）只展示，卡上只留玩家能决定的控件 =====
+var playerBlock = '', mechCompact = '';
+{
+if (!a.special){
+playerBlock =
+'<div class="adv"><div class="adv-title">你的设置</div>' +
+'<div class="num-row">' +
+'<div><label>充能效率 %（超出 100% 的部分）</label><input type="number" min="0" max="200" step="0.1" data-kind="ally-err" data-i="'+i+'" value="'+(a.err || 0)+'" /></div>' +
+'<div></div>' +
+'</div>' +
+'<div class="preset-meta" style="margin-top:4px">充能绳 119.4% 就填 19.4；击杀 +10 为全队固定规则，自动计入。敌方行动只作时间标记，不回能。</div>' +
+'</div>';
+}
+if ((a.advPct || 0) > 0){
+mechCompact +=
+'<div class="adv"><div class="adv-title">战技拉条（已内置 ' + a.advPct + '%' + (a.advPct >= 100? ' · 立即行动': '') + '）</div>' +
+'<div class="num-row">' +
+'<div><label>拉条方式</label><select class="char-select" data-kind="ally-advmode" data-i="'+i+'" aria-label="拉条方式">' + advModeOpts + '</select></div>' +
+'<div><label>' + (a.advMode === 'flex'? '默认对象（推演时每次现选）': '拉条对象') + '</label><select class="char-select" data-kind="ally-advt" data-i="'+i+'" aria-label="拉条对象">' + advOpts + '</select></div>' +
+'</div>' +
+'<div class="preset-meta" style="margin-top:4px">比例由技能固定，只决定拉谁；对象选「无」可关。</div>' +
+'</div>';
+}
+var sbP = a.spdBuff || {};
+if (sbP.trig && (sbP.val || 0) > 0){
+var buffCtl = '';
+if (sbP.scope === 'target'){
+buffCtl = '<div class="num-row">' +
+'<div><label>对象方式</label><select class="char-select" data-kind="ally-bmode" data-i="'+i+'" aria-label="加速对象方式"><option value="fixed"' + (sbP.mode !== 'flex'? ' selected': '') + '>固定对象（每次都给同一人）</option><option value="flex"' + (sbP.mode === 'flex'? ' selected': '') + '>灵活（每次可换人，搜索自动选最优）</option></select></div>' +
+'<div><label>指定队友</label><select class="char-select" data-kind="ally-btarget" data-i="'+i+'" aria-label="加速指定队友">' + targetOpts(sbP.target) + '</select></div>' +
+'</div>';
+}
+mechCompact +=
+'<div class="adv"><div class="adv-title">持续加速（已内置）</div>' +
+'<div class="preset-meta">' + trigName(sbP.trig) + ' · ' + scopeName(sbP.scope) + ' · 速度 +' + sbP.val + (sbP.trig === 'passive'? ' · 常驻生效': ' · 持续 ' + (sbP.dur || 2) + ' 次行动') + '，数值由技能 / 天赋固定。' + (sbP.scope === 'target'? '你只需决定给谁。': '') + '</div>' + buffCtl +
+'</div>';
+}
+var uaP = a.ultAdv || {};
+if (uaP.scope && (uaP.pct || 0) > 0){
+var uaCtl = '';
+if (uaP.scope === 'target'){
+uaCtl = '<div class="num-row">' +
+'<div><label>对象方式</label><select class="char-select" data-kind="ally-uamode" data-i="'+i+'" aria-label="终结技拉条对象方式"><option value="fixed"' + (uaP.mode !== 'flex'? ' selected': '') + '>固定对象（每次都拉同一人）</option><option value="flex"' + (uaP.mode === 'flex'? ' selected': '') + '>灵活（每次可换人，搜索自动选最优）</option></select></div>' +
+'<div><label>指定队友</label><select class="char-select" data-kind="ally-uatarget" data-i="'+i+'" aria-label="终结技拉条指定队友">' + targetOpts(uaP.target) + '</select></div>' +
+'</div>';
+}
+mechCompact +=
+'<div class="adv"><div class="adv-title">终结技拉条（已内置）</div>' +
+'<div class="preset-meta">释放终结技时使' + scopeName(uaP.scope) + '的下一次行动提前 ' + uaP.pct + '%，比例由技能固定。</div>' + uaCtl +
+'</div>';
+}
+var bkP = a.breakAdv || {};
+if ((bkP.pct || 0) > 0){
+mechCompact +=
+'<div class="adv"><div class="adv-title">击破自拉条（已内置 ' + bkP.pct + '%' + (bkP.pct >= 100? ' · 立即再行动一次': '') + '）</div>' +
+'<div class="num-row">' +
+'<div><label>是否开启（有对应星魂才开）</label><select class="char-select" data-kind="ally-brkon" data-i="'+i+'" aria-label="击破自拉条是否开启"><option value="0"' + (bkP.on? '': ' selected') + '>关闭</option><option value="1"' + (bkP.on? ' selected': '') + '>开启</option></select></div>' +
+'<div><label>本场最多触发次数（按实战预估）</label><input type="number" min="1" max="9" step="1" data-kind="ally-brkmax" data-i="'+i+'" value="'+(bkP.max || 1)+'" /></div>' +
+'</div>' +
+'<div class="preset-meta" style="margin-top:4px">有对应星魂才开；次数上限按实战预估。</div>' +
+'</div>';
+}
+var fuP = a.fu || {};
+if (fuP.trig){
+mechCompact +=
+'<div class="adv"><div class="adv-title">' + (fuP.trig === 'enemy'? '反击': '追加攻击') + '（已内置 · 简化模型）</div>' +
+'<div class="preset-meta">' + (fuP.trig === 'enemy'? '敌方行动后必定反击一次': '队友普攻 / 战技后必定追击一次') + '，每次倍率 ' + (fuP.mult || 0) + '%、回能 +' + (fuP.regen || 0) + '、削韧 ' + (fuP.tgh || 0) + '。</div>' +
+'</div>';
+}
+var sbP = a.sb || {};
+if (a.charId === 'firefly'){
+mechCompact +=
+'<div class="adv"><div class="adv-title">超击破（完全燃烧 · 已内置）</div>' +
+'<div class="num-row">' +
+'<div><label>超击破状态</label><select class="char-select" data-kind="ally-sbon" data-i="'+i+'" aria-label="超击破状态"><option value="0"' + (sbP.selfOn? '': ' selected') + '>关闭</option><option value="1"' + (sbP.selfOn? ' selected': '') + '>开启（完全燃烧期间）</option></select></div>' +
+'<div></div>' +
+'</div>' +
+'<div class="preset-meta" style="margin-top:4px">开启后，流萤攻击已击破敌人按本次削韧结算超击破（公式见页脚）。</div>' +
+'</div>';
+}
+if (a.charId === 'fugue'){
+mechCompact +=
+'<div class="adv"><div class="adv-title">超击破赋予（忘归人战技 · 已内置）</div>' +
+'<div class="num-row">' +
+'<div><label>是否赋予</label><select class="char-select" data-kind="ally-sbgon" data-i="'+i+'" aria-label="超击破赋予开关"><option value="0"' + (sbP.grantOn? '': ' selected') + '>关闭</option><option value="1"' + (sbP.grantOn? ' selected': '') + '>开启</option></select></div>' +
+'<div><label>赋予对象</label><select class="char-select" data-kind="ally-sbgt" data-i="'+i+'" aria-label="超击破赋予对象">' + targetOpts(sbP.grantTarget) + '</select></div>' +
+'</div>' +
+'<div class="preset-meta" style="margin-top:4px">被赋予者攻击已击破敌人按其击破特攻结算超击破。</div>' +
+'</div>';
+}
+if (a.charId === 'tb-harm'){
+mechCompact +=
+'<div class="adv"><div class="adv-title">超击破赋予（终结技 · 全队）</div>' +
+'<div class="num-row">' +
+'<div><label>是否赋予</label><select class="char-select" data-kind="ally-sballon" data-i="'+i+'" aria-label="超击破全队赋予开关"><option value="0"' + (sbP.allOn? '': ' selected') + '>关闭</option><option value="1"' + (sbP.allOn? ' selected': '') + '>开启</option></select></div>' +
+'<div></div>' +
+'</div>' +
+'<div class="preset-meta" style="margin-top:4px">开启后全队攻击已击破敌人按各自击破特攻结算超击破。</div>' +
+'</div>';
+}
+}
+card.innerHTML = (
+'<label>选择角色</label>' +
+'<select class="char-select" data-kind="ally-char" data-i="'+i+'" aria-label="选择角色">' + charOptions(a.charId) + '</select>' +
+'<div style="height:8px"></div>' + head + meta +
+'<label>面板速度（游戏内实际速度）</label>' +
+'<input type="number" min="1" max="300" step="0.1" data-kind="ally-spd" data-i="'+i+'" value="'+a.spd+'" />' +
+'<div class="av-line"><span>单次 AV <b>'+fmt(av)+'</b></span>' +
+'<span class="badge'+(b150>=2?'':' miss')+'">150 内 '+b150+' 动</span>' +
+'<span class="badge'+(b250>=3?'':' miss')+'">250 内 '+b250+' 动</span></div>' +
+playerBlock + dmgPresetBlock + mechCompact);
+tg.appendChild(card);
+});
+renderSummons();
+renderEnemySetup();
+bindSetupInputs();
+}
+
+// 忆灵 / 召唤物：由预置角色自动带出，只读展示
+function renderSummons(){
+var box = $('summonBox'); if (!box) return;
+var autos = autoSummons();
+if (!autos.length){ box.innerHTML = ''; return; }
+var html = '<div class="section-head" style="margin-bottom:8px"><h2 style="font-size:18px">忆灵 / 召唤物</h2><span>由预置角色自动带出。</span></div>';
+autos.forEach(function(sm){
+html += '<div class="card" style="margin-bottom:10px;border-top:4px solid ' + SUMMON_COLOR + '"><div class="preset-name" style="font-size:15px">' + escapeHtml(sm.name) + ' <span class="badge">自动带出</span></div>' +
+'<div class="preset-meta">归属 <b>' + escapeHtml((allies[sm.owner] && allies[sm.owner].name) || ('角色 ' + (sm.owner + 1))) + '</b> · 速度 <b>' + sm.spd + '</b>（角色固定数据）· 行动时给归属回能 <b>+' + (sm.regen || 0) + '</b>、倍率 <b>' + (sm.mult || 0) + '%</b>（按归属角色面板结算伤害）、削韧 <b>' + (sm.tgh || 0) + '</b>（韧性模拟时自动打韧性最低的未击破敌人）。换下归属角色自动移除。</div></div>';
+});
+box.innerHTML = html;
+}
+
+function renderEnemySetup(){
+// 模式下拉
+var ms = $('modeSelect');
+var mhtml = MODES.map(function(m){
+return '<option value="'+m.id+'"'+(enemyMode===m.id?' selected':'')+'>'+escapeHtml(m.name)+' · '+escapeHtml(m.cycle)+'</option>';
+}).join('') + '<option value="custom"'+(enemyMode==='custom'?' selected':'')+'>自定义敌人（手动填写）</option>';
+ms.innerHTML = mhtml;
+var ss = $('stageSelect');
+var info = $('modeInfo');
+$('customCountFld').style.display = enemyMode === 'custom'? '': 'none';
+if (enemyMode === 'custom'){
+ss.innerHTML = '<option>手动配置</option>';
+ss.disabled = true;
+info.innerHTML = '<div class="mi-title">自定义敌人</div><p>不在当期高难名单里的敌人（剧情 Boss、周本、历战余响等），在这里手动填名字、速度和韧性。</p>';
+$('enemyNote').textContent = '自定义敌人：速度与韧性自己填。';
+} else {
+ss.disabled = false;
+var m = modeById(enemyMode);
+ss.innerHTML = m.stages.map(function(s){
+return '<option value="'+s.id+'"'+(enemyStageId===s.id?' selected':'')+'>'+escapeHtml(s.label)+'</option>';
+}).join('');
+var st = currentStage();
+info.innerHTML = '<div class="mi-title">' + escapeHtml(m.name) + ' · <span>' + escapeHtml(m.cycle) + '</span>　' + escapeHtml(m.period) + '</div>' +
+'<p><b>本关：</b>' + escapeHtml(st.label) + '　<b>' + escapeHtml(st.weak) + '</b></p>' +
+'<p><b>环境：</b>' + escapeHtml(m.buff) + '</p>';
+$('enemyNote').textContent = '速度与韧性为本关固定数据、只读，不用关心。';
+}
+// 敌人卡片
+var eg = $('enemyGrid'); eg.innerHTML = '';
+enemies.forEach(function(e, i){
+var av = avOf(Math.max(1,+e.spd||1));
+var card = document.createElement('div');
+card.className = 'card enemy-card';
+if (e.custom){
+card.innerHTML =
+'<input class="name-input" data-kind="enemy-name" data-i="'+i+'" value="'+escapeHtml(e.name)+'" aria-label="敌人名" />' +
+'<label>速度</label>' +
+'<input type="number" min="1" max="400" step="0.1" data-kind="enemy-spd" data-i="'+i+'" value="'+e.spd+'" />' +
+'<label>韧性值（韧性模拟开启时生效）</label>' +
+'<input type="number" min="1" max="300" step="1" data-kind="enemy-tgh" data-i="'+i+'" value="'+(e.tgh != null? e.tgh: 30)+'" />' +
+'<div class="av-line"><span>单次 AV <b>'+fmt(av)+'</b></span><span>250 AV 内 <b>'+actionsWithin(+e.spd||1,250)+' 动</b></span></div>';
+} else {
+card.innerHTML =
+'<div class="preset-name" style="font-size:15.5px">' + escapeHtml(e.name) + '</div>' +
+'<div class="preset-meta">弱点 <b>' + escapeHtml(e.weak || '—') + '</b>' + (e.note? '<br />' + escapeHtml(e.note): '') + '</div>' +
+'<div class="preset-meta" style="margin-top:6px">速度 <b>' + e.spd + '</b>（固定）· 单次 AV <b>' + fmt(av) + '</b> · 250 AV 内 <b>' + actionsWithin(+e.spd||1,250) + ' 动</b></div>' +
+'<div class="preset-meta">韧性值 <b>' + (e.tgh != null? e.tgh: 30) + '</b>（固定）</div>';
+}
+eg.appendChild(card);
+});
+}
+
+function bindSetupInputs(){
+var inputs = document.querySelectorAll('[data-kind]');
+for (var k = 0; k < inputs.length; k++){
+inputs[k].addEventListener('input', function(ev){
+var el = ev.target, kind = el.getAttribute('data-kind'), i = +el.getAttribute('data-i');
+var v = el.value;
+if (kind === 'ally-char'){
+var ch = charById(v); if (ch) allies[i] = allyFromChar(ch);
+renderSetup(); resetSim();
+return;
+}
+if (kind === 'ally-spd') allies[i].spd = parseFloat(v) || 1;
+else if (kind === 'ally-err') allies[i].err = Math.max(0, parseFloat(v) || 0);
+else if (kind === 'ally-atk') allies[i].atk = Math.max(0, parseFloat(v) || 0);
+else if (kind === 'ally-cr') allies[i].cr = Math.max(0, Math.min(100, parseFloat(v) || 0));
+else if (kind === 'ally-cd') allies[i].cd = Math.max(0, parseFloat(v) || 0);
+else if (kind === 'ally-db') allies[i].dmgB = Math.max(0, parseFloat(v) || 0);
+else if (kind === 'ally-be') allies[i].be = Math.max(0, parseFloat(v) || 0);
+else if (kind === 'ally-advt') allies[i].advTarget = parseInt(v, 10);
+else if (kind === 'ally-advmode') allies[i].advMode = v;
+else if (kind === 'ally-bmode'){ if (!allies[i].spdBuff) allies[i].spdBuff = { trig:'', scope:'all', target:-1, val:0, dur:2, mode:'fixed' }; allies[i].spdBuff.mode = v;}
+else if (kind === 'ally-uamode'){ if (!allies[i].ultAdv) allies[i].ultAdv = { scope:'', target:-1, pct:0, mode:'fixed' }; allies[i].ultAdv.mode = v;}
+else if (kind === 'ally-btarget') allies[i].spdBuff.target = parseInt(v, 10);
+else if (kind === 'ally-uatarget') allies[i].ultAdv.target = parseInt(v, 10);
+else if (kind === 'ally-brkon'){ if (!allies[i].breakAdv) allies[i].breakAdv = { on:false, pct:0, trig:'both', max:1 }; allies[i].breakAdv.on = v === '1';}
+else if (kind === 'ally-brkmax'){ if (!allies[i].breakAdv) allies[i].breakAdv = { on:false, pct:0, trig:'both', max:1 }; allies[i].breakAdv.max = Math.max(1, Math.min(9, parseInt(v, 10) || 1));}
+else if (kind === 'ally-sbon'){ if (!allies[i].sb) allies[i].sb = { selfOn:false, grantOn:false, grantTarget:-1, allOn:false }; allies[i].sb.selfOn = v === '1';}
+else if (kind === 'ally-sbgon'){ if (!allies[i].sb) allies[i].sb = { selfOn:false, grantOn:false, grantTarget:-1, allOn:false }; allies[i].sb.grantOn = v === '1';}
+else if (kind === 'ally-sbgt'){ if (!allies[i].sb) allies[i].sb = { selfOn:false, grantOn:false, grantTarget:-1, allOn:false }; allies[i].sb.grantTarget = parseInt(v, 10);}
+else if (kind === 'ally-sballon'){ if (!allies[i].sb) allies[i].sb = { selfOn:false, grantOn:false, grantTarget:-1, allOn:false }; allies[i].sb.allOn = v === '1';}
+else if (kind === 'enemy-name'){ enemies[i].name = v; if (enemyMode === 'custom') customEnemies[i].name = v;}
+else if (kind === 'enemy-spd'){ enemies[i].spd = parseFloat(v) || 1; if (enemyMode === 'custom') customEnemies[i].spd = enemies[i].spd;}
+else if (kind === 'enemy-tgh'){ enemies[i].tgh = Math.max(1, parseFloat(v) || 30); if (enemyMode === 'custom' && customEnemies[i]) customEnemies[i].tgh = enemies[i].tgh;}
+if (kind === 'enemy-name'){
+buildUnits();
+units.forEach(function(u){ if (nextAt[u.key] == null) nextAt[u.key] = avOf(u.spd);});
+renderSim(); renderSequence(); renderTables();
+} else {
+resetSimLight();
+}
+});
+}
+}
+function resetSimLight(){
+buildUnits();
+nextAt = {}; energy = {}; buffs = {};
+units.forEach(function(u){ nextAt[u.key] = avOf(u.spd); buffs[u.key] = [];});
+applyPassiveG(nextAt, buffs, unitMapBuild());
+breakUsed = {}; allies.forEach(function(a, i){ breakUsed['a'+i] = 0;});
+dmgMap = {}; allies.forEach(function(a, i){ dmgMap['a'+i] = 0;});
+initTgh();
+allies.forEach(function(a, i){
+energy['a'+i] = a.special? 0: Math.min(+a.maxEnergy||120, Math.max(0, +a.startEnergy||0));
+});
+sp = 3; elapsed = 0; step = 0; actLog = []; snapshots = [];
+renderSim(); renderSequence(); renderTables();
+}
+document.addEventListener('change', function(ev){
+if (ev.target && ev.target.hasAttribute && ev.target.hasAttribute('data-kind') && ev.target.getAttribute('data-kind')!== 'ally-char') renderSetup();
+});
+
+// ---------- 渲染：推演区 ----------
+function renderSim(){
+var dots = '';
+for (var i = 0; i < SP_MAX; i++) dots += '<span class="sp-dot'+(i < sp? ' on': '')+'"></span>';
+$('spDots').innerHTML = dots;
+$('spNum').textContent = sp + ' / ' + SP_MAX;
+var u = nextUnit();
+$('spWarn').style.display = (u && u.type === 'ally' && sp <= 0)? 'inline': 'none';
+$('simMeta').textContent = '第 ' + (step + 1) + ' 步 · 已推进 ' + fmt(elapsed) + ' AV · 当前第 ' + cycleOf(Math.max(elapsed, 0.0001)) + ' 轮';
+var box = $('nowBox');
+if (!u){ box.innerHTML = '';}
+else if (u.type === 'ally'){
+var av = nextAt[u.key];
+var uBuff = bSumMap(buffs, u.key);
+var metaSpd = uBuff > 0? (' · 有效速度 ' + fmt(u.spd + uBuff, (u.spd + uBuff) % 1? 1: 0) + '（基础 ' + fmt(u.spd, u.spd % 1? 1: 0) + ' +' + uBuff + '）'): '';
+var metaEnergy = (u.special? '特殊机制，不走能量': ('能量 ' + Math.round(energy[u.key]) + ' / ' + u.maxEnergy)) + metaSpd;
+var bReg = effRegen(u, 'basic'), sReg = effRegen(u, 'skill');
+var bDmgT = dmgOf(u, u.multB, 1), sDmgT = dmgOf(u, u.multS, 1);
+var basicD = (u.special? ('战技点 +1（现 '+sp+'）· 特殊机制不回能'): ('战技点 +1（现 '+sp+'）· 能量 +'+fmt(bReg, bReg % 1? 1: 0))) + (bDmgT > 0? ' · 伤害 ≈' + fmtDmg(bDmgT): '');
+var skillD = (u.special? ((sp<=0?'战技点不足':'战技点 −1（现 '+sp+'）')+' · 特殊机制不回能'): ((sp<=0?'战技点不足':'战技点 −1（现 '+sp+'）')+' · 能量 +'+fmt(sReg, sReg % 1? 1: 0))) + (sDmgT > 0? ' · 伤害 ≈' + fmtDmg(sDmgT): '');
+var flexHtml = '';
+var flexAdv = u.advPct > 0 && u.advMode === 'flex';
+var flexBuff = u.spdBuff && u.spdBuff.val > 0 && u.spdBuff.scope === 'target' && u.spdBuff.mode === 'flex' && (u.spdBuff.trig === 'skill' || u.spdBuff.trig === 'both');
+if (flexAdv || flexBuff){
+var allyOpts = function(sel, allowNone){
+var h = allowNone? '<option value="-1"' + (sel === -1? ' selected': '') + '>这次不拉条</option>': '';
+units.forEach(function(x){
+if (x.type!== 'ally') return;
+h += '<option value="' + x.idx + '"' + (sel === x.idx? ' selected': '') + '>' + escapeHtml(x.name) + (x.idx === u.idx? '（自己）': '') + '</option>';
+});
+return h;
+};
+var defAdv = (u.advTarget != null && u.advTarget >= 0)? u.advTarget: (u.idx === 0? 1: 0);
+var defBuff = (u.spdBuff.target != null && u.spdBuff.target >= 0)? u.spdBuff.target: (u.idx === 0? 1: 0);
+flexHtml = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">' +
+(flexAdv? '<div style="flex:1;min-width:180px"><label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">本次战技拉条对象（灵活 · 每次可换）</label><select id="flexAdvSel" class="char-select" aria-label="本次战技拉条对象">' + allyOpts(defAdv, true) + '</select></div>': '') +
+(flexBuff? '<div style="flex:1;min-width:180px"><label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">本次战技加速对象（灵活 · 每次可换）</label><select id="flexBuffSel" class="char-select" aria-label="本次战技加速对象">' + allyOpts(defBuff, false) + '</select></div>': '') +
+'</div>';
+}
+var targetHtml = '';
+if (tghOn){
+var tOpts = '';
+units.forEach(function(x){
+if (x.type!== 'enemy') return;
+var curT = tghCur[x.key];
+tOpts += '<option value="' + x.idx + '">' + escapeHtml(x.name) + '（韧性 ' + (tghBroken[x.key]? '已击破': Math.round(curT != null? curT: x.tghMax) + ' / ' + x.tghMax) + '）</option>';
+});
+targetHtml = '<div style="margin-top:12px"><label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">本次攻击目标（韧性模拟 · 普攻 / 战技削韧，终结技作用于全体）</label><select id="flexTargetSel" class="char-select" aria-label="本次攻击目标">' + tOpts + '</select></div>';
+}
+var breakHtml = '';
+if (u.breakAdv && u.breakAdv.on && u.breakAdv.pct > 0){
+var bLeft = Math.max(0, u.breakAdv.max - (breakUsed[u.key] || 0));
+var bTrigName = u.breakAdv.trig === 'skill'? '战技': u.breakAdv.trig === 'basic'? '普攻': '普攻 / 战技';
+breakHtml = tghOn? '<div style="margin-top:12px"><div class="preset-meta">韧性模拟：击破自动判定（自拉条还可触发 ' + bLeft + ' 次）。</div></div>' : '<div style="margin-top:12px"><label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">本次行动是否击破敌方韧性或击杀敌人（击破自拉条 ' + u.breakAdv.pct + '% · 触发动作：' + bTrigName + ' · 本场还可触发 ' + bLeft + ' 次）</label>' +
+(bLeft > 0? '<select id="flexBreakSel" class="char-select" aria-label="本次行动是否击破韧性"><option value="0" selected>未击破（不触发）</option><option value="1">击破了（触发自拉条' + (u.breakAdv.pct >= 100? '，立即再行动一次': '') + '）</option></select>': '<div class="preset-meta">本场触发次数已用完，如与实战不符请在角色卡里调高「本场最多触发次数」。</div>') + '</div>';
+}
+var killHtml = '';
+var anyKill = units.some(function(x){ return x.type === 'ally' && (x.killRegen || 0) > 0;});
+if (anyKill){
+killHtml = '<div style="margin-top:12px"><label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">本次行动是否击杀敌人（击杀回能：全队每人 +10）</label>' +
+'<select id="flexKillSel" class="char-select" aria-label="本次行动是否击杀敌人"><option value="0" selected>未击杀</option><option value="1">击杀了（结算击杀回能）</option></select></div>';
+}
+box.innerHTML =
+'<div class="now-top"><span class="now-who"><span class="dot" style="background:'+u.color+'"></span>' + escapeHtml(u.name) + ' 的回合</span>' +
+'<span class="now-meta">行动时刻 ' + fmt(av) + ' AV · 第 ' + cycleOf(av) + ' 轮 · ' + metaEnergy + '</span></div>' + targetHtml + flexHtml + breakHtml + killHtml +
+'<div class="act-btns">' +
+'<button type="button" class="act-btn" id="btnBasic"><span class="t">普攻</span><span class="d">'+basicD+'</span></button>' +
+'<button type="button" class="act-btn primary" id="btnSkill" '+(sp<=0?'disabled':'')+'><span class="t">战技</span><span class="d">'+skillD+'</span></button>' +
+'</div>';
+$('btnBasic').addEventListener('click', function(){
+var o = {};
+var fx = document.getElementById('flexBreakSel'); if (fx) o.breakTrigger = fx.value === '1';
+var fk = document.getElementById('flexKillSel'); if (fk) o.kill = fk.value === '1';
+var ft = document.getElementById('flexTargetSel'); if (ft) o.target = parseInt(ft.value, 10);
+doAction('basic', o);
+});
+var bs = $('btnSkill'); if (bs) bs.addEventListener('click', function(){
+var o = {};
+var fa = document.getElementById('flexAdvSel'); if (fa) o.advTarget = parseInt(fa.value, 10);
+var fb = document.getElementById('flexBuffSel'); if (fb) o.buffTarget = parseInt(fb.value, 10);
+var fx = document.getElementById('flexBreakSel'); if (fx) o.breakTrigger = fx.value === '1';
+var fk = document.getElementById('flexKillSel'); if (fk) o.kill = fk.value === '1';
+var ft = document.getElementById('flexTargetSel'); if (ft) o.target = parseInt(ft.value, 10);
+doAction('skill', o);
+});
+} else if (u.type === 'summon') {
+var av3 = nextAt[u.key];
+var ownerName = (allies[u.owner] && allies[u.owner].name) || ('角色 ' + (u.owner + 1));
+var sumMeta = '归属 ' + ownerName + (u.fuRegen > 0? ' · 行动给归属回能 +' + u.fuRegen: '') + (tghOn && u.tghDmg > 0? ' · 削韧 ' + u.tghDmg + '（自动打韧性最低的未击破敌人）': '');
+box.innerHTML =
+'<div class="now-top"><span class="now-who"><span class="dot" style="background:'+u.color+'"></span>' + escapeHtml(u.name) + ' 的回合（忆灵 / 召唤物）</span>' +
+'<span class="now-meta">行动时刻 ' + fmt(av3) + ' AV · 第 ' + cycleOf(av3) + ' 轮 · ' + sumMeta + '</span></div>' +
+'<button type="button" class="enemy-btn" id="btnSummon" style="border-color:var(--gold);background:var(--gold-bg);color:var(--gold-ink)">召唤物行动 · 继续推演 →</button>';
+$('btnSummon').addEventListener('click', function(){ doAction('summon');});
+} else {
+var av2 = nextAt[u.key];
+box.innerHTML =
+'<div class="now-top"><span class="now-who"><span class="dot" style="background:'+u.color+'"></span>' + escapeHtml(u.name) + ' 的回合</span>' +
+'<span class="now-meta">行动时刻 ' + fmt(av2) + ' AV · 第 ' + cycleOf(av2) + ' 轮 · 只作时间标记，不产生回能</span></div>' +
+'<button type="button" class="enemy-btn" id="btnEnemy">敌人行动 · 继续推演 →</button>';
+$('btnEnemy').addEventListener('click', function(){ doAction('enemy');});
+}
+$('undoBtn').disabled = snapshots.length === 0;
+// 能量面板
+var el = $('energyList'); el.innerHTML = '';
+units.filter(function(x){ return x.type === 'ally';}).forEach(function(a){
+var div = document.createElement('div');
+var aBuffs = (buffs[a.key] || []).filter(function(e){ return e.v > 0;});
+var buffHtml = aBuffs.length? '<div class="buff-line">加速生效中：' + aBuffs.map(function(e){ return '+' + e.v + ' 速度（剩 ' + (e.left > 900? '常驻': e.left + ' 次行动') + '）';}).join(' · ') + '</div>': '';
+var brkLine = (a.breakAdv && a.breakAdv.on && a.breakAdv.pct > 0)? '<div class="buff-line">击破自拉条 ' + a.breakAdv.pct + '% 已开启：本场还可触发 ' + Math.max(0, a.breakAdv.max - (breakUsed[a.key] || 0)) + ' / ' + a.breakAdv.max + ' 次</div>': '';
+var dmgLine = (dmgMap[a.key] || 0) > 0? '<div class="buff-line">累计期望伤害 ≈ ' + fmtDmg(dmgMap[a.key]) + '（含其追击与召唤物）</div>': '';
+if (a.special){
+div.className = 'energy-item';
+div.innerHTML =
+'<div class="energy-head"><span class="energy-name"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+a.color+';margin-right:6px"></span>' + escapeHtml(a.name) + '</span>' +
+'<span class="special-tag">特殊机制</span></div>' +
+'<div class="special-note">' + escapeHtml(a.specialNote || '该角色不使用能量，终结技按专属资源释放。') + '</div>' + buffHtml + brkLine + dmgLine;
+} else {
+var cur = energy[a.key], full = cur >= a.maxEnergy;
+var pct = Math.min(100, cur / a.maxEnergy * 100);
+div.className = 'energy-item' + (full? ' full': '');
+var ultFlexHtml = '';
+var uFlexBuff = a.spdBuff && a.spdBuff.val > 0 && a.spdBuff.scope === 'target' && a.spdBuff.mode === 'flex' && (a.spdBuff.trig === 'ult' || a.spdBuff.trig === 'both');
+var uFlexAdv = a.ultAdv && a.ultAdv.pct > 0 && a.ultAdv.scope === 'target' && a.ultAdv.mode === 'flex';
+if (uFlexBuff || uFlexAdv){
+var uOpts = function(sel){
+var h = '';
+units.forEach(function(x){
+if (x.type!== 'ally') return;
+h += '<option value="' + x.idx + '"' + (sel === x.idx? ' selected': '') + '>' + escapeHtml(x.name) + (x.idx === a.idx? '（自己）': '') + '</option>';
+});
+return h;
+};
+var dB = (a.spdBuff.target != null && a.spdBuff.target >= 0)? a.spdBuff.target: (a.idx === 0? 1: 0);
+var dA = (a.ultAdv.target != null && a.ultAdv.target >= 0)? a.ultAdv.target: (a.idx === 0? 1: 0);
+ultFlexHtml = '<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">' +
+(uFlexBuff? '<label style="font-size:12px;font-weight:700;color:var(--muted)">本次终结技加速对象（灵活）<select id="ultBuffSel-' + a.key + '" class="char-select" style="margin-top:3px" aria-label="本次终结技加速对象">' + uOpts(dB) + '</select></label>': '') +
+(uFlexAdv? '<label style="font-size:12px;font-weight:700;color:var(--muted)">本次终结技拉条对象（灵活）<select id="ultAdvSel-' + a.key + '" class="char-select" style="margin-top:3px" aria-label="本次终结技拉条对象">' + uOpts(dA) + '</select></label>': '') +
+'</div>';
+}
+div.innerHTML =
+'<div class="energy-head"><span class="energy-name"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+a.color+';margin-right:6px"></span>' + escapeHtml(a.name) + ' <span class="full-tag">终结技就绪</span></span>' +
+'<span class="energy-val">' + Math.round(cur) + ' / ' + a.maxEnergy + '</span></div>' +
+'<div class="bar"><i style="width:'+pct+'%"></i></div>' + buffHtml + brkLine + dmgLine + ultFlexHtml +
+'<button type="button" class="ult-btn" data-ult="'+a.key+'">释放终结技 · ' + escapeHtml(a.name) + '</button>';
+}
+el.appendChild(div);
+});
+var ults = el.querySelectorAll('[data-ult]');
+for (var j = 0; j < ults.length; j++){
+ults[j].addEventListener('click', function(ev){ doUlt(ev.target.getAttribute('data-ult'));});
+}
+// 敌方韧性条（韧性模拟开启时）
+var tb = $('tghBox');
+if (tb){
+if (!tghOn){ tb.innerHTML = '';}
+else {
+tb.innerHTML = '<h3 style="margin:14px 0 4px;font-size:13.5px">敌方韧性（击破后行动延后 25%，敌方行动后恢复）</h3>' + units.filter(function(x){ return x.type === 'enemy';}).map(function(x){
+var curT = tghCur[x.key] != null? tghCur[x.key]: x.tghMax;
+var pctT = Math.max(0, Math.min(100, curT / x.tghMax * 100));
+return '<div class="energy-item"><div class="energy-head"><span class="energy-name" style="font-size:13.5px">' + escapeHtml(x.name) + (tghBroken[x.key]? ' <span class="full-tag">已击破</span>': '') + '</span><span class="energy-val">韧性 ' + Math.round(curT) + ' / ' + x.tghMax + '</span></div><div class="bar tgh"><i style="width:' + pctT + '%"></i></div></div>';
+}).join('');
+}
+}
+// 历史
+var hl = $('histList');
+if (!actLog.length){
+hl.innerHTML = '<div class="empty-note">还没有行动。在上方给当前角色选普攻或战技，记录会逐条记在这里。</div>';
+} else {
+hl.innerHTML = actLog.map(function(h, i){
+return '<div class="hist-item"><span class="hist-av">#' + (i+1) + ' · ' + fmt(h.av) + ' AV · 第' + h.cycle + '轮</span>' +
+'<span class="hist-what"><b>' + escapeHtml(h.who) + '</b> ' + h.what + (h.note? '（' + escapeHtml(h.note) + '）': '') + '</span>' +
+(h.spAfter!= null? '<span class="hist-sp">战技点 ' + h.spAfter + '</span>': '') + '</div>';
+}).join('');
+hl.scrollTop = hl.scrollHeight;
+}
+}
+
+function renderSequence(){
+var seq = pureSequence(36);
+var turnActs = actLog.filter(function(h){ return!h.ult;});
+var html = '', lastCycle = 0;
+seq.forEach(function(s, i){
+if (s.cycle!== lastCycle){
+html += '<div class="cycle-divider">第 ' + s.cycle + ' 轮</div>';
+lastCycle = s.cycle;
+}
+var cls = i < step? 'done': (i === step? 'next': '');
+var doneAct = '';
+if (i < step && turnActs[i]) doneAct = turnActs[i].what;
+html += '<div class="tl-item '+cls+'"><span class="tl-idx">'+(i+1)+'</span>' +
+'<span class="tl-dot" style="background:'+s.unit.color+'"></span>' +
+'<span class="tl-name">'+escapeHtml(s.unit.name)+'</span>' +
+(doneAct? '<span class="tl-act">'+doneAct+'</span>': '') +
+'<span class="tl-av">'+fmt(s.av)+' AV</span><span class="tl-cycle">第'+s.cycle+'轮</span></div>';
+});
+$('tlList').innerHTML = html;
+}
+
+var THRESH_ROWS = [
+{ label:'第 1 轮内（≤150 AV）动 2 次', times:2, limit:150},
+{ label:'前 2 轮内（≤250 AV）动 3 次', times:3, limit:250},
+{ label:'前 3 轮内（≤350 AV）动 4 次', times:4, limit:350},
+{ label:'前 4 轮内（≤450 AV）动 5 次', times:5, limit:450},
+{ label:'前 5 轮内（≤550 AV）动 6 次', times:6, limit:550}
+];
+function renderTables(){
+var limits = [150, 250, 350, 450];
+var html = '<tr><th>单位</th><th class="num">速度</th>' + limits.map(function(L){ return '<th class="num">≤'+L+' AV</th>';}).join('') + '</tr>';
+units.forEach(function(u){
+html += '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+u.color+';margin-right:6px"></span>' + escapeHtml(u.name) + '</td><td class="num">' + fmt(u.spd, u.spd % 1? 1: 0) + '</td>' +
+limits.map(function(L){ return '<td class="num">' + actionsWithin(u.spd, L) + ' 次</td>';}).join('') + '</tr>';
+});
+$('countTable').innerHTML = html;
+var th = '<tr><th>目标</th><th class="num">所需速度 ≥</th>' + allies.map(function(a){ return '<th class="num">' + escapeHtml(a.name || '角色') + '</th>';}).join('') + '</tr>';
+THRESH_ROWS.forEach(function(r){
+var need = needSpd(r.times, r.limit);
+th += '<tr><td>' + r.label + '</td><td class="num"><b>' + fmt(need) + '</b></td>' +
+allies.map(function(a){
+var ok = (+a.spd || 0) >= need - 1e-9;
+return '<td class="num '+(ok? 'hit': 'miss')+'">' + (ok? '✓ 达标': '差 ' + fmt(need - (+a.spd||0))) + '</td>';
+}).join('') + '</tr>';
+});
+$('threshTable').innerHTML = th;
+}
+
+function renderAll(){
+renderSim(); renderSequence(); renderTables();
+if (typeof renderReverse === 'function') renderReverse();
+}
+
+// ---------- 五、反推配速 ----------
+var revLimit = 250;
+var revTimes = [3, 3, 3, 3];
+var revOrder = [1, 2, 3, 4];
+var revInitDone = false;
+var revResult = null;
+function round1(v){ return Math.round(v * 10) / 10;}
+function initReverse(){
+var order = allies.map(function(a, i){ return { i:i, spd:+a.spd || 1 };});
+order.sort(function(x, y){ return (y.spd - x.spd) || (x.i - y.i);});
+order.forEach(function(o, rank){ revOrder[o.i] = rank + 1;});
+allies.forEach(function(a, i){ revTimes[i] = Math.max(1, actionsWithin(+a.spd || 1, revLimit));});
+revInitDone = true;
+}
+function computeReverse(){
+var limit = revLimit;
+var lowers = [], uppers = [], rec = [];
+// 常驻加速（如阮·梅天赋）计入有效速度：区间与推荐都先在有效速度口径下算，最后把推荐扣回面板口径
+var adds = allies.map(function(a, i){
+var s = 0;
+allies.forEach(function(c, ci){
+var b = c.spdBuff;
+if (b && b.trig === 'passive' && (b.val || 0) > 0 && recipientsOf(ci, b.scope, b.target).indexOf(i) >= 0) s += b.val;
+});
+return s;
+});
+allies.forEach(function(a, i){
+var t = Math.max(1, revTimes[i] || 1);
+lowers[i] = needSpd(t, limit);
+uppers[i] = needSpd(t + 1, limit);
+rec[i] = lowers[i];
+});
+// 按顺位从后往前拉开间隔：先行动者速度必须严格更高（每级至少 +1.0）
+var byRank = allies.map(function(a, i){ return i;}).sort(function(x, y){ return revOrder[x] - revOrder[y];});
+for (var k = byRank.length - 2; k >= 0; k--){
+var i = byRank[k], j = byRank[k + 1];
+if (rec[i] < rec[j] + 1) rec[i] = round1(rec[j] + 1);
+}
+var rows = allies.map(function(a, i){
+var cur = +a.spd || 1;
+var effCur = cur + adds[i];
+var conflict = rec[i] >= uppers[i] - 1e-9;
+var inRange = effCur >= lowers[i] - 1e-9 && effCur < uppers[i] - 1e-9;
+return { i:i, lower:lowers[i], upper:uppers[i], rec:round1(rec[i] - adds[i]), conflict:conflict, inRange:inRange, cur:cur, effCur:effCur, add:adds[i] };
+});
+// 当前有效速度下的顺位是否与目标一致
+var orderOk = true;
+for (var x = 0; x < allies.length; x++) for (var y = 0; y < allies.length; y++){
+if (revOrder[x] < revOrder[y] && ((+allies[x].spd || 1) + adds[x]) <= ((+allies[y].spd || 1) + adds[y])) orderOk = false;
+}
+return { rows:rows, byRank:byRank, orderOk:orderOk };
+}
+function renderReverse(){
+if (!revInitDone) initReverse();
+var r = computeReverse();
+revResult = r;
+var html = '<tr><th>角色</th><th class="num">目标动数</th><th class="num">行动顺位</th><th class="num">当前速度</th><th class="num">速度区间</th><th class="num">推荐速度</th><th>状态</th></tr>';
+r.rows.forEach(function(row){
+var a = allies[row.i];
+var status;
+if (row.conflict){
+status = '<span class="stat-bad">目标冲突</span><br /><span style="font-size:12px;color:var(--muted)">推荐值已达到会多动一次的上限：动数与顺位无法同时满足，建议降低该角色目标动数，或放宽其顺位。</span>';
+} else if (row.inRange && r.orderOk){
+status = '<span class="stat-ok">✓ 当前配速已满足，可直接开自动</span>';
+} else if (row.inRange && !r.orderOk){
+status = '<span class="stat-mid">动数达标，但全队顺位与目标不一致</span><br /><span style="font-size:12px;color:var(--muted)">按推荐速度统一调整即可对齐。</span>';
+} else {
+status = '<span class="stat-mid">需调整到推荐速度</span>' + (row.cur < row.lower? '<br /><span style="font-size:12px;color:var(--muted)">当前速度动数不足。</span>': '<br /><span style="font-size:12px;color:var(--muted)">当前速度会多动一次、打乱轴。</span>');
+}
+var orderOpts = '';
+for (var rk = 1; rk <= allies.length; rk++) orderOpts += '<option value="' + rk + '"' + (revOrder[row.i] === rk? ' selected': '') + '>第 ' + rk + ' 个行动</option>';
+html += '<tr><td><span class="who-dot" style="background:' + ALLY_COLORS[row.i] + '"></span>' + escapeHtml(a.name || ('角色 ' + (row.i + 1))) + '</td>' +
+'<td class="num"><input type="number" class="mini-input" min="1" max="9" step="1" data-rev="times" data-i="' + row.i + '" value="' + revTimes[row.i] + '" aria-label="目标动数" /></td>' +
+'<td class="num"><select class="mini-select" data-rev="order" data-i="' + row.i + '" aria-label="行动顺位">' + orderOpts + '</select></td>' +
+'<td class="num">' + fmt(row.cur, row.cur % 1? 1: 0) + (row.add > 0? '<br /><span style="font-size:12px;color:var(--muted)">有效 ' + fmt(row.effCur, row.effCur % 1? 1: 0) + '（常驻 +' + row.add + '）</span>': '') + '</td>' +
+'<td class="num">' + fmt(row.lower) + ' ～ &lt;' + fmt(row.upper) + (row.add > 0? '<br /><span style="font-size:12px;color:var(--muted)">（有效速度口径）</span>': '') + '</td>' +
+'<td class="num"><span class="rec-val">' + fmt(row.rec) + '</span></td>' +
+'<td>' + status + '</td></tr>';
+});
+$('revTable').innerHTML = html;
+var revInputs = $('revTable').querySelectorAll('[data-rev]');
+for (var q = 0; q < revInputs.length; q++){
+revInputs[q].addEventListener('change', function(ev){
+var el = ev.target, i = +el.getAttribute('data-i');
+if (el.getAttribute('data-rev') === 'times'){ revTimes[i] = Math.max(1, parseInt(el.value, 10) || 1);}
+else {
+// 顺位互换：与原占该顺位的角色对调，保证顺位始终是 1..4 的排列
+var target = parseInt(el.value, 10) || 1, old = revOrder[i];
+for (var j = 0; j < revOrder.length; j++) if (revOrder[j] === target) revOrder[j] = old;
+revOrder[i] = target;
+}
+renderReverse();
+});
+}
+}
+function applyReverse(){
+if (!revResult) renderReverse();
+revResult.rows.forEach(function(row){ allies[row.i].spd = row.rec;});
+renderSetup(); resetSim();
+}
+
+// ---------- 六、最优轴搜索（束搜索） ----------
+var optHorizon = 350, optGoal = 'ult';
+var optPlan = null, optSummary = null;
+function optWeights(){
+if (optGoal === 'dmg') return { ult:30, skill:10, basic:4, overflow:0.5, waste:18, forced:6, endSp:2, endEnergy:0.04, dmgW:0.01 };
+if (optGoal === 'skill') return { ult:90, skill:22, basic:4, overflow:0.5, waste:18, forced:6, endSp:2, endEnergy:0.04, dmgW:0.0002 };
+if (optGoal === 'smooth') return { ult:90, skill:10, basic:4, overflow:1.2, waste:45, forced:25, endSp:6, endEnergy:0.04, dmgW:0.0002 };
+return { ult:160, skill:10, basic:4, overflow:0.5, waste:18, forced:6, endSp:2, endEnergy:0.04, dmgW:0.0002 };
+}
+function cloneState(st){
+return { t:JSON.parse(JSON.stringify(st.t)), en:JSON.parse(JSON.stringify(st.en)), buffs:JSON.parse(JSON.stringify(st.buffs || {})), brk:JSON.parse(JSON.stringify(st.brk || {})), tgh:JSON.parse(JSON.stringify(st.tgh || {})), broken:JSON.parse(JSON.stringify(st.broken || {})), sp:st.sp, score:st.score, clock:st.clock || 0, kills:st.kills || 0,
+plan:st.plan.slice(), stats:{ ult:st.stats.ult, skill:st.stats.skill, basic:st.stats.basic, overflow:st.stats.overflow, waste:st.stats.waste, forced:st.stats.forced, dmg:st.stats.dmg || 0 }};
+}
+function searchOptimal(){
+buildUnits();
+var W = optWeights();
+var unitMap = {};
+units.forEach(function(u){ unitMap[u.key] = u;});
+var init = { t:{}, en:{}, buffs:{}, brk:{}, tgh:{}, broken:{}, sp:3, score:0, clock:0, kills:0, plan:[], stats:{ ult:0, skill:0, basic:0, overflow:0, waste:0, forced:0, dmg:0 }};
+units.forEach(function(u){ init.t[u.key] = avOf(u.spd); init.buffs[u.key] = []; init.brk[u.key] = 0; if (u.type === 'enemy'){ init.tgh[u.key] = u.tghMax; init.broken[u.key] = false;}});
+applyPassiveG(init.t, init.buffs, unitMap);
+allies.forEach(function(a, i){ init.en['a' + i] = a.special? 0: Math.min(+a.maxEnergy || 120, Math.max(0, +a.startEnergy || 0));});
+function nextKeyOf(st){
+var best = null;
+units.forEach(function(u){ if (best === null || st.t[u.key] < st.t[best] - 1e-9) best = u.key;});
+return best;
+}
+function breakEligibleS(u, kind, st){
+var ba = u.breakAdv;
+return !!(ba && ba.on && ba.pct > 0 && (st.brk[u.key] || 0) < ba.max && (ba.trig === 'both' || ba.trig === kind));
+}
+// 韧性模拟（搜索）：攻击目标自动选未击破且韧性最低的敌人；返回 {tgt, broke}
+function pickTargetS(st){
+var cand = null;
+units.forEach(function(u){
+if (u.type!== 'enemy' || st.broken[u.key]) return;
+if (!cand || (st.tgh[u.key] || 0) < (st.tgh[cand.key] || 0)) cand = u;
+});
+if (!cand) units.forEach(function(u){ if (u.type === 'enemy' && !cand) cand = u;});
+return cand;
+}
+function applyTghS(st, atk, kind){
+if (!tghOn) return { tgt:null, broke:false, sb:0 };
+var tu = pickTargetS(st);
+if (!tu) return { tgt:null, broke:false, sb:0 };
+var dmg = kind === 'basic'? (atk.tghBasic || 0): (atk.tghSkill || 0);
+if (st.broken[tu.key]){
+var sb = (dmg > 0 && sbCapableIdx(atk.idx))? superBreakDmgOf(atk, dmg): 0;
+return { tgt:tu, broke:false, sb:sb };
+}
+if (dmg > 0){
+st.tgh[tu.key] = Math.max(0, (st.tgh[tu.key] != null? st.tgh[tu.key]: tu.tghMax) - dmg);
+if (st.tgh[tu.key] <= 0){
+st.broken[tu.key] = true;
+st.t[tu.key] += avOf(tu.spd) * 0.25;
+return { tgt:tu, broke:true, sb:0 };
+}
+}
+return { tgt:tu, broke:false, sb:0 };
+}
+// 韧性模拟（搜索）：对自动目标造成固定削韧（召唤物 / 追击用），击破伤害按 breaker（召唤物传归属角色）的面板结算，返回击破说明或空
+function applyTghDamageS(st, dmg, breaker){
+if (!tghOn || !(dmg > 0)) return null;
+var tu = pickTargetS(st);
+if (!tu) return null;
+if (st.broken[tu.key]){
+if (breaker && sbCapableIdx(breaker.idx)){ var sbD = superBreakDmgOf(breaker, dmg); if (sbD > 0){ st.stats.dmg += sbD; st.score += sbD * W.dmgW; return '超击破伤害 ≈' + fmtDmg(sbD) + '（' + tu.name + ' 已击破）'; } }
+return null;
+}
+st.tgh[tu.key] = Math.max(0, (st.tgh[tu.key] != null? st.tgh[tu.key]: tu.tghMax) - dmg);
+if (st.tgh[tu.key] <= 0){ st.broken[tu.key] = true; st.t[tu.key] += avOf(tu.spd) * 0.25;
+var bd = breakDmgOf(breaker, tu);
+if (bd > 0){ st.stats.dmg += bd; st.score += bd * W.dmgW; return '击破 ' + tu.name + ' 韧性（行动延后 25%）；击破伤害 ≈' + fmtDmg(bd); }
+return '击破 ' + tu.name + ' 韧性（行动延后 25%）';}
+return null;
+}
+// 结算一次追加攻击 / 反击（搜索）：追击者回能（溢出计入统计）+ 削韧（优先打 targetKey，未给则自动选目标），返回说明或空
+function applyFUS(st, f, targetKey){
+var parts = [];
+if ((f.fu.mult || 0) > 0){
+var fd = dmgOf(f, f.fu.mult, 1);
+if (fd > 0){ st.stats.dmg += fd; st.score += fd * W.dmgW; parts.push('伤害 ≈' + fmtDmg(fd));}
+}
+if (!f.special && (f.fu.regen || 0) > 0){
+var g = Math.min(f.maxEnergy, (st.en[f.key] || 0) + f.fu.regen);
+st.stats.overflow += ((st.en[f.key] || 0) + f.fu.regen) - g;
+st.en[f.key] = g;
+parts.push('回能 +' + f.fu.regen);
+}
+if (tghOn && (f.fu.tgh || 0) > 0){
+var tu = (targetKey && unitMap[targetKey])? unitMap[targetKey]: pickTargetS(st);
+if (tu && !st.broken[tu.key]){
+st.tgh[tu.key] = Math.max(0, (st.tgh[tu.key] != null? st.tgh[tu.key]: tu.tghMax) - f.fu.tgh);
+var brkF = false;
+if (st.tgh[tu.key] <= 0){ st.broken[tu.key] = true; st.t[tu.key] += avOf(tu.spd) * 0.25; brkF = true;}
+parts.push('削韧 ' + tu.name + ' ' + f.fu.tgh + (brkF? '（击破，行动延后 25%）': ''));
+if (brkF){ var bdFu = breakDmgOf(f, tu); if (bdFu > 0){ st.stats.dmg += bdFu; st.score += bdFu * W.dmgW; parts.push('击破伤害 ≈' + fmtDmg(bdFu)); } }
+} else if (tu && st.broken[tu.key] && sbCapableIdx(f.idx)){
+var sbFu = superBreakDmgOf(f, f.fu.tgh);
+if (sbFu > 0){ st.stats.dmg += sbFu; st.score += sbFu * W.dmgW; parts.push('超击破伤害 ≈' + fmtDmg(sbFu)); }
+}
+}
+return parts.length? ('追击 · ' + f.name + '（' + parts.join('、') + '）'): null;
+}
+// 击杀回能（搜索）：全队每人按各自所填获得能量，溢出计入统计
+var anyKillRegenS = units.some(function(x){ return x.type === 'ally' && (x.killRegen || 0) > 0;});
+var killCapS = Math.max(1, enemies.length);
+function applyKillS(st){
+st.kills = (st.kills || 0) + 1;
+units.forEach(function(x){
+if (x.type!== 'ally' || x.special || !(x.killRegen > 0)) return;
+var g = Math.min(x.maxEnergy, (st.en[x.key] || 0) + x.killRegen);
+st.stats.overflow += ((st.en[x.key] || 0) + x.killRegen) - g;
+st.en[x.key] = g;
+});
+}
+// 给已入轴的一步再克隆出一个「本次击杀」变体（替换最后一步的副本并标注），返回变体或 null
+function killVariant(st){
+if (!anyKillRegenS || (st.kills || 0) >= killCapS || !st.plan.length) return null;
+var ck = cloneState(st);
+applyKillS(ck);
+var last = ck.plan[ck.plan.length - 1], cp = {};
+for (var kk in last) cp[kk] = last[kk];
+cp.kill = true;
+cp.note = cp.note? cp.note + '；击杀敌人（全队击杀回能）': '击杀敌人（全队击杀回能）';
+ck.plan[ck.plan.length - 1] = cp;
+return ck;
+}
+var BEAM = 240;
+var beam = [init], guard = 0;
+while (beam.length && guard < 500){
+guard++;
+var allDone = true;
+for (var b = 0; b < beam.length; b++){ if (beam[b].t[nextKeyOf(beam[b])] <= optHorizon + 1e-9){ allDone = false; break;}}
+if (allDone) break;
+var nextBeam = [];
+beam.forEach(function(st){
+var k = nextKeyOf(st), u = unitMap[k], time = st.t[k];
+if (time > optHorizon + 1e-9){ nextBeam.push(st); return;}
+if (u.type === 'summon'){
+var cs0 = cloneState(st);
+var smNotes = [];
+var ownerU = unitMap['a' + u.owner];
+if (ownerU && (u.mult || 0) > 0){
+var sd0 = dmgOf(ownerU, u.mult, 1);
+if (sd0 > 0){ cs0.stats.dmg += sd0; cs0.score += sd0 * W.dmgW; smNotes.push('伤害 ≈' + fmtDmg(sd0) + '（计入归属 ' + ownerU.name + '）');}
+}
+if (ownerU && !ownerU.special && (u.fuRegen || 0) > 0){
+var g0 = Math.min(ownerU.maxEnergy, (cs0.en[ownerU.key] || 0) + u.fuRegen);
+cs0.stats.overflow += ((cs0.en[ownerU.key] || 0) + u.fuRegen) - g0;
+cs0.en[ownerU.key] = g0;
+smNotes.push('归属 ' + ownerU.name + ' 回能 +' + u.fuRegen);
+}
+cs0.t[k] = time + avOf(u.spd);
+var brkSm = applyTghDamageS(cs0, u.tghDmg || 0, ownerU);
+if (brkSm) smNotes.push(brkSm);
+else if (tghOn && (u.tghDmg || 0) > 0) smNotes.push('削韧 ' + u.tghDmg);
+cs0.plan.push({ kind:'summon', key:k, who:u.name, av:time, spAfter:null, enAfter:null, note: smNotes.length? smNotes.join('；'): null });
+cs0.clock = time;
+nextBeam.push(cs0);
+return;
+}
+if (u.type === 'enemy'){
+var c = cloneState(st);
+c.plan.push({ kind:'enemy', key:k, who:u.name, av:time, spAfter:null, enAfter:null });
+c.clock = time;
+c.t[k] = time + avOf(u.spd);
+if (c.broken[k]){ c.broken[k] = false; c.tgh[k] = u.tghMax;}
+units.forEach(function(x){ if (x.type === 'ally' && x.fu && x.fu.trig === 'enemy') applyFUS(c, x, k);});
+nextBeam.push(c);
+return;
+}
+// 己方回合：先决定是否插队放终结技（可放的每人一个分支 + 不放一个分支）
+var variants = [st];
+units.forEach(function(x){
+if (x.type === 'ally' && !x.special && st.en[x.key] >= x.maxEnergy - 1e-9){
+// 终结技附带效果若是「指定队友」范围且为灵活方式：每个候选对象各开一个分支，逐个试
+var uBuffOpts = [null];
+if (x.spdBuff && x.spdBuff.val > 0 && x.spdBuff.scope === 'target' && (x.spdBuff.trig === 'ult' || x.spdBuff.trig === 'both')){
+uBuffOpts = x.spdBuff.mode === 'flex'? allies.map(function(aa, ai){ return ai;}) : [x.spdBuff.target];
+}
+var uAdvOpts = [null];
+if (x.ultAdv && x.ultAdv.pct > 0 && x.ultAdv.scope === 'target'){
+uAdvOpts = x.ultAdv.mode === 'flex'? allies.map(function(aa, ai){ return ai;}) : [x.ultAdv.target];
+}
+uBuffOpts.forEach(function(ubo){
+uAdvOpts.forEach(function(uao){
+var c2 = cloneState(st);
+c2.en[x.key] = 0; c2.score += W.ult; c2.stats.ult++;
+var uDmg = dmgOf(x, x.multU, x.ultScope === 'all'? Math.max(1, enemies.length): 1);
+if (uDmg > 0){ c2.stats.dmg += uDmg; c2.score += uDmg * W.dmgW;}
+// 终结技在上一步行动结束的时刻释放（与手动推演点终结技按钮的时刻一致），效果按此时刻结算
+var uNotes = [];
+var ubn = applyTrigBuffG(c2.t, c2.buffs, unitMap, x, 'ult', st.clock, ubo);
+if (ubn) uNotes.push(ubn);
+var uan = applyUltAdvG(c2.t, c2.buffs, unitMap, x, st.clock, uao);
+if (uan) uNotes.push(uan);
+if (tghOn && (x.tghUlt || 0) > 0){
+units.forEach(function(eu){
+if (eu.type!== 'enemy') return;
+if (c2.broken[eu.key]){
+if (sbCapableIdx(x.idx)){ var sbU2 = superBreakDmgOf(x, x.tghUlt); if (sbU2 > 0){ c2.stats.dmg += sbU2; c2.score += sbU2 * W.dmgW; uNotes.push('超击破伤害 ≈' + fmtDmg(sbU2) + '（' + eu.name + ' 已击破）'); } }
+return;
+}
+c2.tgh[eu.key] = Math.max(0, (c2.tgh[eu.key] != null? c2.tgh[eu.key]: eu.tghMax) - x.tghUlt);
+if (c2.tgh[eu.key] <= 0){ c2.broken[eu.key] = true; c2.t[eu.key] += avOf(eu.spd) * 0.25; uNotes.push('击破 ' + eu.name + ' 韧性（行动延后 25%）'); var bdU2 = breakDmgOf(x, eu); if (bdU2 > 0){ c2.stats.dmg += bdU2; c2.score += bdU2 * W.dmgW; uNotes.push('击破伤害 ≈' + fmtDmg(bdU2)); } }
+});
+}
+if (uDmg > 0) uNotes.push('伤害 ≈' + fmtDmg(uDmg) + (x.ultScope === 'all'? '（全体合计）': ''));
+c2.plan.push({ kind:'ult', key:x.key, who:x.name, av:st.clock, spAfter:null, enAfter:0, note: uNotes.length? uNotes.join('；'): null, ultBuffTarget:ubo, ultAdvTarget:uao });
+variants.push(c2);
+});
+});
+}
+});
+variants.forEach(function(v){
+// 终结技的加速 / 拉条可能把另一名队友拉到同一时刻：以效果结算后的下一行动者为准，与手动推演的回放口径一致
+var ak = nextKeyOf(v), au = unitMap[ak], at = v.t[ak];
+if (au.type!== 'ally') return;
+var base = cloneState(v);
+expireG(base.buffs, ak);
+var av = avOf(effSpdMap(unitMap, base.buffs, ak));
+// 普攻分支
+var cb = cloneState(base);
+if (cb.sp >= SP_MAX){ cb.stats.waste++; cb.score -= W.waste;}
+if (cb.sp <= 0){ cb.stats.forced++; cb.score -= W.forced;}
+cb.sp = Math.min(SP_MAX, cb.sp + 1);
+var enB = null;
+if (!au.special){
+var brg = effRegen(au, 'basic');
+var gain = Math.min(au.maxEnergy, cb.en[ak] + brg), lost = (cb.en[ak] + brg) - gain;
+cb.stats.overflow += lost; cb.score -= lost * W.overflow; cb.en[ak] = gain; enB = gain;
+}
+cb.score += W.basic; cb.stats.basic++;
+var dmgB0 = dmgOf(au, au.multB, 1);
+if (dmgB0 > 0){ cb.stats.dmg += dmgB0; cb.score += dmgB0 * W.dmgW;}
+var tgB = applyTghS(cb, au, 'basic');
+var bdB = tgB.broke? breakDmgOf(au, tgB.tgt): 0;
+if (bdB > 0){ cb.stats.dmg += bdB; cb.score += bdB * W.dmgW; }
+var sbB = tgB.sb || 0;
+if (sbB > 0){ cb.stats.dmg += sbB; cb.score += sbB * W.dmgW; }
+var fuNotesB = [];
+units.forEach(function(x){ if (x.type === 'ally' && x.key!== ak && x.fu && x.fu.trig === 'ally'){ var fn = applyFUS(cb, x, tgB.tgt? tgB.tgt.key: null); if (fn) fuNotesB.push(fn);}});
+var bOptsB = tghOn? ((tgB.broke && breakEligibleS(au, 'basic', cb))? [true]: [false]) : (breakEligibleS(au, 'basic', cb)? [false, true]: [false]);
+bOptsB.forEach(function(bTrig){
+var cbb = cloneState(cb);
+cbb.t[ak] = at + av;
+var bNoteB = null;
+if (bTrig){
+cbb.brk[ak] = (cbb.brk[ak] || 0) + 1;
+cbb.t[ak] = Math.max(at, cbb.t[ak] - avOf(effSpdMap(unitMap, cbb.buffs, ak)) * au.breakAdv.pct / 100);
+bNoteB = '击破自拉条 ' + au.breakAdv.pct + '%（第 ' + cbb.brk[ak] + ' 次）';
+}
+var noteB = bNoteB;
+if (dmgB0 > 0){ var dmTxt = '伤害 ≈' + fmtDmg(dmgB0); noteB = noteB? noteB + '；' + dmTxt: dmTxt;}
+if (tgB.broke){ var bkTxt = '击破 ' + tgB.tgt.name + ' 韧性（行动延后 25%）'; noteB = noteB? bkTxt + '；' + noteB: bkTxt;}
+if (bdB > 0){ var bdTxtB = '击破伤害 ≈' + fmtDmg(bdB); noteB = noteB? noteB + '；' + bdTxtB: bdTxtB; }
+if (sbB > 0){ var sbTxtB = '超击破伤害 ≈' + fmtDmg(sbB); noteB = noteB? noteB + '；' + sbTxtB: sbTxtB; }
+if (fuNotesB.length) noteB = noteB? noteB + '；' + fuNotesB.join('；'): fuNotesB.join('；');
+cbb.plan.push({ kind:'basic', key:ak, who:au.name, av:at, spAfter:cbb.sp, enAfter:enB, note:noteB, breakTrigger:bTrig, tgt:(tgB.tgt? tgB.tgt.idx: null), tgtName:(tgB.tgt? tgB.tgt.name: null) });
+cbb.clock = at;
+nextBeam.push(cbb);
+var kvB = killVariant(cbb);
+if (kvB) nextBeam.push(kvB);
+});
+// 战技分支：拉条 / 指定队友加速为灵活方式时，每个候选对象各开一个分支（含「这次不拉」），让搜索逐回合挑最优对象
+if (base.sp > 0){
+var advOptsS = [-1];
+if (au.advPct > 0){
+if (au.advMode === 'flex'){
+advOptsS = allies.map(function(aa, ai){ return ai;}).filter(function(ai){ return ai!== au.idx;});
+advOptsS.push(-1);
+} else {
+advOptsS = [au.advTarget];
+}
+}
+var buffOptsS = [null];
+if (au.spdBuff && au.spdBuff.val > 0 && au.spdBuff.scope === 'target' && (au.spdBuff.trig === 'skill' || au.spdBuff.trig === 'both')){
+buffOptsS = au.spdBuff.mode === 'flex'? allies.map(function(aa, ai){ return ai;}) : [au.spdBuff.target];
+}
+advOptsS.forEach(function(advOpt){
+buffOptsS.forEach(function(buffOpt){
+var cs = cloneState(base);
+cs.sp = base.sp - 1;
+var enS = null;
+if (!au.special){
+var srg = effRegen(au, 'skill');
+var gain2 = Math.min(au.maxEnergy, cs.en[ak] + srg), lost2 = (cs.en[ak] + srg) - gain2;
+cs.stats.overflow += lost2; cs.score -= lost2 * W.overflow; cs.en[ak] = gain2; enS = gain2;
+}
+cs.score += W.skill; cs.stats.skill++;
+var dmgS0 = dmgOf(au, au.multS, 1);
+if (dmgS0 > 0){ cs.stats.dmg += dmgS0; cs.score += dmgS0 * W.dmgW;}
+cs.t[ak] = at + av;
+var sNotes = [];
+var sbn = applyTrigBuffG(cs.t, cs.buffs, unitMap, au, 'skill', at, buffOpt);
+if (sbn) sNotes.push(sbn);
+if (advOpt != null && advOpt >= 0 && au.advPct > 0){
+var advTk = 'a' + advOpt, advTu = unitMap[advTk];
+if (advTu){
+cs.t[advTk] = Math.max(at, cs.t[advTk] - avOf(effSpdMap(unitMap, cs.buffs, advTk)) * au.advPct / 100);
+sNotes.push('拉条 ' + advTu.name + ' ' + au.advPct + '%');
+}
+}
+cs.clock = at;
+var tgS = applyTghS(cs, au, 'skill');
+var bdS = tgS.broke? breakDmgOf(au, tgS.tgt): 0;
+if (bdS > 0){ cs.stats.dmg += bdS; cs.score += bdS * W.dmgW; }
+var sbS = tgS.sb || 0;
+if (sbS > 0){ cs.stats.dmg += sbS; cs.score += sbS * W.dmgW; }
+units.forEach(function(x){ if (x.type === 'ally' && x.key!== ak && x.fu && x.fu.trig === 'ally'){ var fn = applyFUS(cs, x, tgS.tgt? tgS.tgt.key: null); if (fn) sNotes.push(fn);}});
+var bOptsS = tghOn? ((tgS.broke && breakEligibleS(au, 'skill', cs))? [true]: [false]) : (breakEligibleS(au, 'skill', cs)? [false, true]: [false]);
+bOptsS.forEach(function(bTrig){
+var cs2 = cloneState(cs);
+var notes2 = sNotes.slice();
+if (bTrig){
+cs2.brk[ak] = (cs2.brk[ak] || 0) + 1;
+cs2.t[ak] = Math.max(at, cs2.t[ak] - avOf(effSpdMap(unitMap, cs2.buffs, ak)) * au.breakAdv.pct / 100);
+notes2.push('击破自拉条 ' + au.breakAdv.pct + '%（第 ' + cs2.brk[ak] + ' 次）');
+}
+if (dmgS0 > 0) notes2.push('伤害 ≈' + fmtDmg(dmgS0));
+if (tgS.broke) notes2.push('击破 ' + tgS.tgt.name + ' 韧性（行动延后 25%）');
+if (bdS > 0) notes2.push('击破伤害 ≈' + fmtDmg(bdS));
+if (sbS > 0) notes2.push('超击破伤害 ≈' + fmtDmg(sbS));
+cs2.plan.push({ kind:'skill', key:ak, who:au.name, av:at, spAfter:cs2.sp, enAfter:enS, note: notes2.length? notes2.join('；'): null, advTarget:advOpt, buffTarget:buffOpt, breakTrigger:bTrig, tgt:(tgS.tgt? tgS.tgt.idx: null), tgtName:(tgS.tgt? tgS.tgt.name: null) });
+nextBeam.push(cs2);
+var kvS = killVariant(cs2);
+if (kvS) nextBeam.push(kvS);
+});
+});
+});
+}
+});
+});
+// 去重 + 剪枝
+var seen = {}, ded = [];
+nextBeam.forEach(function(st){
+var sig = units.map(function(u){ return Math.round(st.t[u.key] * 2);}).join(',') + '|' +
+allies.map(function(a, i){ return Math.round(st.en['a' + i] || 0);}).join(',') + '|' + st.sp + '|' + allies.map(function(a, i){ return st.brk['a' + i] || 0;}).join(',') + '|' +
+units.map(function(u){ return (st.buffs[u.key] || []).map(function(e){ return e.v + ':' + Math.min(e.left, 9);}).join('+');}).join(',') + '|' + Math.round((st.clock || 0) * 2) + '|' +
+units.map(function(u){ return u.type === 'enemy'? Math.round(st.tgh[u.key] || 0) + (st.broken[u.key]? 'B': ''): '';}).join(',') + '|' + (st.kills || 0);
+if (!seen[sig] || seen[sig].score < st.score) seen[sig] = st;
+});
+for (var key in seen) ded.push(seen[key]);
+ded.sort(function(a, b){ return b.score - a.score;});
+beam = ded.slice(0, BEAM);
+}
+var best = null, bestFinal = -Infinity;
+beam.forEach(function(st){
+var sumEn = 0;
+allies.forEach(function(a, i){ sumEn += st.en['a' + i] || 0;});
+var fin = st.score + W.endSp * st.sp + W.endEnergy * sumEn;
+if (fin > bestFinal){ bestFinal = fin; best = st;}
+});
+optPlan = best.plan;
+optSummary = { stats:best.stats, endSp:best.sp };
+renderOptimal();
+}
+function renderOptimal(){
+var box = $('optResult');
+if (!optPlan){
+box.innerHTML = '<p class="empty-note" style="margin:0">还没有搜索结果。编队和敌人选好后点「搜索最优轴」，这里会给出完整的操作序列。</p>';
+$('optApply').disabled = true;
+$('optExport').disabled = true;
+return;
+}
+var s = optSummary.stats;
+var goalName = optGoal === 'ult'? '终结技次数优先': (optGoal === 'dmg'? '伤害优先（期望伤害）': (optGoal === 'smooth'? '战技点最顺': '战技次数优先'));
+var html = '<div class="plan-stats">' +
+'<span class="chip">目标 <b>' + goalName + '</b></span>' +
+'<span class="chip">范围 <b>≤' + optHorizon + ' AV</b></span>' +
+'<span class="chip">期望总伤害 <b>≈' + fmtDmg(s.dmg || 0) + '</b></span>' +
+'<span class="chip">终结技 <b>' + s.ult + ' 次</b></span>' +
+'<span class="chip">战技 <b>' + s.skill + ' 次</b></span>' +
+'<span class="chip">普攻 <b>' + s.basic + ' 次</b></span>' +
+'<span class="chip">能量溢出 <b>' + Math.round(s.overflow) + ' 点</b></span>' +
+'<span class="chip">战技点浪费 <b>' + s.waste + ' 次</b></span>' +
+'<span class="chip">结束战技点 <b>' + optSummary.endSp + '</b></span></div>';
+html += '<div class="plan-list">';
+var lastCycle = 0;
+optPlan.forEach(function(p, i){
+var cyc = cycleOf(Math.max(p.av, 0.0001));
+if (p.kind!== 'ult' && cyc!== lastCycle){ html += '<div class="cycle-divider">第 ' + cyc + ' 轮</div>'; lastCycle = cyc;}
+var label = p.kind === 'basic'? '普攻': p.kind === 'skill'? '战技': p.kind === 'ult'? '终结技（插队）': p.kind === 'summon'? '召唤物行动': '敌人行动';
+var dot = p.kind === 'enemy'? ENEMY_COLOR: (function(){ var u = null; units.forEach(function(x){ if (x.key === p.key) u = x;}); return u? u.color: '#999';})();
+var extra = '';
+if (p.spAfter!= null) extra += '战技点 ' + p.spAfter;
+if (p.enAfter!= null) extra += (extra? ' · ': '') + '能量 ' + Math.round(p.enAfter);
+if (p.tgtName) extra += (extra? ' · ': '') + '目标 ' + p.tgtName;
+if (p.note) extra += (extra? ' · ': '') + p.note;
+html += '<div class="plan-item' + (p.kind === 'ult'? ' ult-row': '') + '"><span class="tl-idx">' + (i + 1) + '</span>' +
+'<span class="tl-dot" style="background:' + dot + '"></span>' +
+'<span class="tl-name">' + escapeHtml(p.who) + ' · ' + label + '</span>' +
+(extra? '<span class="tl-act">' + extra + '</span>': '') +
+'<span class="tl-av">' + fmt(p.av) + ' AV</span></div>';
+});
+html += '</div>';
+box.innerHTML = html;
+$('optApply').disabled = false;
+$('optExport').disabled = false;
+}
+function applyOptimal(){
+if (!optPlan) return;
+resetSim();
+optPlan.forEach(function(p){
+if (p.kind === 'ult') doUlt(p.key, { buffTarget:p.ultBuffTarget, advTarget:p.ultAdvTarget, fromPlan:true });
+else if (p.kind === 'enemy') doAction('enemy');
+else if (p.kind === 'summon') doAction('summon');
+else doAction(p.kind, { advTarget:p.advTarget, buffTarget:p.buffTarget, breakTrigger:p.breakTrigger, target:p.tgt, kill:p.kill });
+});
+var sec = document.querySelector('[aria-label="排轴推演"]');
+if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ---------- 导出轴表 ----------
+function downloadText(filename, text){
+var blob = new Blob([text], { type:'text/plain;charset=utf-8' });
+var url = URL.createObjectURL(blob);
+var a = document.createElement('a');
+a.href = url; a.download = filename;
+document.body.appendChild(a); a.click(); a.remove();
+setTimeout(function(){ URL.revokeObjectURL(url);}, 600);
+}
+function configLines(){
+var lines = ['简易排轴模拟器 · 轴表', ''];
+var tl = [];
+allies.forEach(function(a, i){
+var s = (a.name || ('角色 ' + (i + 1))) + '（速度 ' + a.spd + (a.special? '，特殊机制，不走能量条': '，能量上限 ' + a.maxEnergy + '，普攻回能 ' + a.basicRegen + '，战技回能 ' + a.skillRegen);
+if (a.advPct > 0) s += '，战技拉条 ' + a.advPct + '%' + (a.advMode === 'flex'? '（灵活，每次对象见轴内标注）': (a.advTarget != null && a.advTarget >= 0? '（固定拉 ' + (allies[a.advTarget].name || ('角色 ' + (a.advTarget + 1))) + '）': ''));
+if (a.spdBuff && a.spdBuff.trig && a.spdBuff.val > 0) s += '，持续加速 ' + trigName(a.spdBuff.trig) + ' · ' + scopeName(a.spdBuff.scope) + (a.spdBuff.scope === 'target'? (a.spdBuff.mode === 'flex'? '（灵活，每次对象见轴内标注）': (a.spdBuff.target >= 0? '（' + (allies[a.spdBuff.target].name || ('角色 ' + (a.spdBuff.target + 1))) + '）': '')): '') + ' +' + a.spdBuff.val + ' 速度' + (a.spdBuff.trig === 'passive'? '（常驻）': '，持续 ' + a.spdBuff.dur + ' 次行动');
+if (a.ultAdv && a.ultAdv.scope && a.ultAdv.pct > 0) s += '，终结技拉条 ' + scopeName(a.ultAdv.scope) + (a.ultAdv.scope === 'target'? (a.ultAdv.mode === 'flex'? '（灵活，每次对象见轴内标注）': (a.ultAdv.target >= 0? '（' + (allies[a.ultAdv.target].name || ('角色 ' + (a.ultAdv.target + 1))) + '）': '')): '') + ' ' + a.ultAdv.pct + '%';
+if (a.breakAdv && a.breakAdv.on && a.breakAdv.pct > 0) s += '，击破自拉条 ' + a.breakAdv.pct + '%（' + (a.breakAdv.trig === 'skill'? '仅战技击破时': a.breakAdv.trig === 'basic'? '仅普攻击破时': '普攻 / 战技击破时') + '，本场最多 ' + a.breakAdv.max + ' 次，触发见轴内标注）';
+if ((a.err || 0) > 0) s += '，充能效率 ' + a.err + '%';
+if (a.fu && a.fu.trig) s += '，追击（' + (a.fu.trig === 'ally'? '队友普攻 / 战技后': '敌方行动后') + '，回能 ' + (a.fu.regen || 0) + (tghOn? '，削韧 ' + (a.fu.tgh || 0): '') + ((a.fu.mult || 0) > 0? '，倍率 ' + a.fu.mult + '%': '') + '）';
+s += '，伤害参数：攻击力 ' + (a.atk || 0) + '，倍率 普攻 ' + (a.multB || 0) + '% / 战技 ' + (a.multS || 0) + '% / 终结技 ' + (a.multU || 0) + '%' + (a.ultScope === 'all'? '（全体）': '（单体）') + '，暴击 ' + (a.cr || 0) + '% / ' + (a.cd || 0) + '%，增伤 ' + (a.dmgB || 0) + '%';
+if (tghOn) s += '，削韧 普攻 ' + (a.tghBasic || 0) + ' / 战技 ' + (a.tghSkill || 0) + ' / 终结技 ' + (a.tghUlt || 0);
+tl.push(s + '）');
+});
+lines.push('队伍：' + tl.join('、'));
+var allSum = allSummons();
+if (allSum.length){
+lines.push('忆灵 / 召唤物：' + allSum.map(function(s){
+return (s.name || '召唤物') + '（归属 ' + ((allies[s.owner] && allies[s.owner].name) || ('角色 ' + ((s.owner || 0) + 1))) + '，速度 ' + s.spd + '，每次行动回能 ' + (s.regen || 0) + (tghOn? '，削韧 ' + (s.tgh || 0): '') + ((s.mult || 0) > 0? '，倍率 ' + s.mult + '%': '') + '）';
+}).join('、'));
+}
+var el = enemies.map(function(e){ return e.name + '（速度 ' + e.spd + (tghOn? '，韧性 ' + (e.tgh != null? e.tgh: 30): '') + '）';}).join('、');
+lines.push('韧性条模拟：' + (tghOn? '开启（击破按削韧自动判定，击破延后敌方下一次行动 25%）': '关闭（击破靠手动判断）'));
+lines.push('击杀回能：任意敌人被击杀时全队每人 +10 点能量（游戏固定规则，自动计入）');
+lines.push('敌方行动：只作时间标记，不产生回能');
+lines.push('敌方防御减伤：' + enemyDefPct + '%（伤害模型）');
+if (enemyMode === 'custom'){
+lines.push('敌人（自定义）：' + el);
+} else {
+var m = modeById(enemyMode), st = currentStage();
+lines.push('关卡：' + m.name + ' · ' + m.cycle + '（' + m.period + '）· ' + st.label);
+lines.push('敌人：' + el);
+}
+return lines;
+}
+function exportHistory(){
+var lines = configLines();
+lines.push('', '—— 手动推演记录（共 ' + actLog.length + ' 步） ——');
+if (!actLog.length){
+lines.push('（暂无行动记录）');
+} else {
+actLog.forEach(function(h, i){
+lines.push('#' + (i + 1) + ' · ' + fmt(h.av) + ' AV · 第 ' + h.cycle + ' 轮 · ' + h.who + ' ' + h.what +
+(h.note? '（' + h.note + '）': '') + (h.spAfter!= null? ' · 战技点 ' + h.spAfter: ''));
+});
+var totD = 0, dParts = [];
+allies.forEach(function(a, i){ var dv = dmgMap['a' + i] || 0; totD += dv; if (dv > 0) dParts.push((a.name || ('角色 ' + (i + 1))) + ' ≈' + fmtDmg(dv));});
+if (totD > 0) lines.push('累计期望伤害合计 ≈' + fmtDmg(totD) + (dParts.length? '（' + dParts.join('、') + '）': ''));
+}
+lines.push('', '注：伤害为期望值；击破 / 超击破仅韧性模拟开启时按公式计入（见轴内标注），不算击破持续伤害；敌人不因伤害退场。');
+downloadText('排轴推演记录.txt', lines.join('\n'));
+}
+function exportPlan(){
+if (!optPlan) return;
+var s = optSummary.stats;
+var goalName = optGoal === 'ult'? '终结技次数优先': (optGoal === 'dmg'? '伤害优先（期望伤害）': (optGoal === 'smooth'? '战技点最顺': '战技次数优先'));
+var lines = configLines();
+lines.push('', '—— 最优轴搜索结果 ——');
+lines.push('目标：' + goalName + ' · 范围 ≤' + optHorizon + ' AV · 期望总伤害 ≈' + fmtDmg(s.dmg || 0) + ' · 终结技 ' + s.ult + ' 次 · 战技 ' + s.skill + ' 次 · 普攻 ' + s.basic + ' 次 · 能量溢出 ' + Math.round(s.overflow) + ' 点 · 战技点浪费 ' + s.waste + ' 次 · 结束战技点 ' + optSummary.endSp);
+lines.push('');
+optPlan.forEach(function(p, i){
+var label = p.kind === 'basic'? '普攻': p.kind === 'skill'? '战技': p.kind === 'ult'? '终结技（插队）': p.kind === 'summon'? '召唤物行动': '敌人行动';
+var extra = '';
+if (p.spAfter!= null) extra += '战技点 ' + p.spAfter;
+if (p.enAfter!= null) extra += (extra? ' · ': '') + '能量 ' + Math.round(p.enAfter);
+if (p.tgtName) extra += (extra? ' · ': '') + '目标 ' + p.tgtName;
+if (p.note) extra += (extra? ' · ': '') + p.note;
+lines.push('#' + (i + 1) + ' · ' + fmt(p.av) + ' AV · 第 ' + cycleOf(Math.max(p.av, 0.0001)) + ' 轮 · ' + p.who + ' ' + label + (extra? ' · ' + extra: ''));
+});
+lines.push('', '注：伤害为期望值（防御减伤 ' + enemyDefPct + '%）；击破 / 超击破仅韧性模拟开启时按公式计入，不算击破持续伤害；除「伤害优先」外为结构最优。');
+downloadText('最优轴.txt', lines.join('\n'));
+}
+
+// ---------- 队伍配置导出 / 导入 ----------
+function exportTeam(){
+var data = { app:'hsr-axis-sim', kind:'team-config', version:1, allies:allies, enemyMode:enemyMode, enemyStageId:enemyStageId, customEnemies:customEnemies, customCount:customCount, tghOn:tghOn, enemyDefPct:enemyDefPct };
+downloadText('队伍配置.json', JSON.stringify(data, null, 2));
+}
+function normalizeAlly(a){
+if (!a || typeof a !== 'object' || !a.charId || a.charId === 'custom') return null;
+var pch = charById(a.charId);
+if (!pch) return null;
+// 预置角色的固定数据（能量上限、回能、削韧、机制数值）以内置库为准；只保留玩家决定的部分（面板速度、充能、打法选择、伤害面板）
+var fresh = allyFromChar(pch);
+if (a.spd != null) fresh.spd = a.spd;
+if (a.err != null) fresh.err = a.err;
+if (a.advTarget != null) fresh.advTarget = a.advTarget;
+if (a.advMode) fresh.advMode = a.advMode;
+if (a.atk != null) fresh.atk = a.atk;
+if (a.cr != null) fresh.cr = a.cr;
+if (a.cd != null) fresh.cd = a.cd;
+if (a.dmgB != null) fresh.dmgB = a.dmgB;
+if (a.be != null) fresh.be = a.be;
+if (a.spdBuff){ if (a.spdBuff.target != null) fresh.spdBuff.target = a.spdBuff.target; if (a.spdBuff.mode) fresh.spdBuff.mode = a.spdBuff.mode; }
+if (a.ultAdv){ if (a.ultAdv.target != null) fresh.ultAdv.target = a.ultAdv.target; if (a.ultAdv.mode) fresh.ultAdv.mode = a.ultAdv.mode; }
+if (a.breakAdv){ fresh.breakAdv.on = !!a.breakAdv.on; if (a.breakAdv.max != null) fresh.breakAdv.max = a.breakAdv.max; }
+if (a.sb){ fresh.sb.selfOn = !!a.sb.selfOn; fresh.sb.grantOn = !!a.sb.grantOn; if (a.sb.grantTarget != null) fresh.sb.grantTarget = a.sb.grantTarget; fresh.sb.allOn = !!a.sb.allOn; }
+return fresh;
+}
+function showImportNotice(skipped){
+var el = $('importNotice'); if (!el) return;
+if (skipped > 0){ el.textContent = '导入提示：已跳过 ' + skipped + ' 个自定义角色（该功能已移除），其余配置已载入。'; }
+else { el.textContent = '队伍配置已导入。'; }
+el.style.display = '';
+}
+function importTeamFile(file){
+var reader = new FileReader();
+reader.onload = function(){
+try {
+var data = JSON.parse(reader.result);
+if (!data || !Array.isArray(data.allies) || !data.allies.length) return;
+var imported = [], skippedCustom = 0;
+data.allies.slice(0, 4).forEach(function(a){
+if (a && a.charId === 'custom'){ skippedCustom++; return; }
+var na = normalizeAlly(a);
+if (na) imported.push(na); else if (a) skippedCustom++;
+});
+if (!imported.length) return;
+allies = imported;
+while (allies.length < 4) allies.push(fallbackAllyFor(allies));
+showImportNotice(skippedCustom);
+if (Array.isArray(data.customEnemies) && data.customEnemies.length) customEnemies = data.customEnemies.map(function(e){ return { name:e.name || '敌人', spd:+e.spd || 100, tgh:(e.tgh != null? +e.tgh: 30) };});
+if (data.customCount) customCount = Math.max(1, Math.min(3, +data.customCount || 3));
+enemyMode = data.enemyMode || 'moc';
+if (enemyMode!== 'custom' && !modeById(enemyMode)) enemyMode = 'moc';
+if (enemyMode!== 'custom'){
+var m = modeById(enemyMode), ok = false;
+m.stages.forEach(function(s){ if (s.id === data.enemyStageId) ok = true;});
+enemyStageId = ok? data.enemyStageId: m.stages[0].id;
+}
+if (data.enemyDefPct != null){ enemyDefPct = Math.max(0, Math.min(95, +data.enemyDefPct || 0)); var dp = $('defPct'); if (dp) dp.value = enemyDefPct;}
+tghOn = !!data.tghOn;
+var tg = $('tghToggle'); if (tg) tg.value = tghOn? '1': '0';
+var cc = $('enemyCount'); if (cc) cc.value = String(customCount);
+loadStageEnemies();
+revInitDone = false;
+renderSetup(); resetSim();
+} catch (e) { /* 文件格式不对则忽略，保持当前编队 */ }
+};
+reader.readAsText(file);
+}
+
+// ---------- 事件 ----------
+$('modeSelect').addEventListener('change', function(ev){
+enemyMode = ev.target.value;
+if (enemyMode!== 'custom'){
+var m = modeById(enemyMode);
+enemyStageId = m.stages[0].id;
+}
+loadStageEnemies();
+renderSetup(); resetSim();
+});
+$('stageSelect').addEventListener('change', function(ev){
+enemyStageId = ev.target.value;
+loadStageEnemies();
+renderSetup(); resetSim();
+});
+$('enemyCount').addEventListener('change', function(ev){
+customCount = +ev.target.value;
+loadStageEnemies();
+renderSetup(); resetSim();
+});
+$('tghToggle').addEventListener('change', function(ev){
+tghOn = ev.target.value === '1';
+resetSim();
+});
+$('defPct').addEventListener('change', function(ev){
+enemyDefPct = Math.max(0, Math.min(95, parseFloat(ev.target.value) || 0));
+renderSim();
+});
+$('teamExportBtn').addEventListener('click', exportTeam);
+$('teamImportBtn').addEventListener('click', function(){ $('teamFile').click();});
+$('teamFile').addEventListener('change', function(ev){
+if (ev.target.files && ev.target.files[0]) importTeamFile(ev.target.files[0]);
+ev.target.value = '';
+});
+$('undoBtn').addEventListener('click', undo);
+$('resetBtn').addEventListener('click', function(){ renderSetup(); resetSim();});
+$('revLimit').addEventListener('change', function(ev){ revLimit = +ev.target.value; renderReverse();});
+$('revApply').addEventListener('click', applyReverse);
+$('optHorizon').addEventListener('change', function(ev){ optHorizon = +ev.target.value;});
+$('optGoal').addEventListener('change', function(ev){ optGoal = ev.target.value;});
+$('optRun').addEventListener('click', searchOptimal);
+$('optApply').addEventListener('click', applyOptimal);
+$('exportHistBtn').addEventListener('click', exportHistory);
+$('optExport').addEventListener('click', exportPlan);
+
+// ---------- 启动 ----------
+loadStageEnemies();
+renderSetup();
+resetSim();
+</script>
+</body>
+</html>
